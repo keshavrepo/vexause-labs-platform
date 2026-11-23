@@ -58,7 +58,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
   if (error)
     return (
-      <main className="vxl-product-page min-h-screen">
+      <main className="vx-product-page min-h-screen">
         <StorefrontHeader />
         <div className="vx-page vx-page--narrow">
           <div className="vx-alert vx-alert--danger" role="alert">{error}</div>
@@ -70,7 +70,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
   if (!product)
     return (
-      <main className="vxl-product-page min-h-screen">
+      <main className="vx-product-page min-h-screen">
         <StorefrontHeader />
         <div className="vx-page">
           <div className="vx-pdp" aria-busy="true">
@@ -119,7 +119,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="vxl-product-page min-h-screen">
+    <main className="vx-product-page min-h-screen">
       <StorefrontHeader />
       <div className="vx-page">
         <nav aria-label="Breadcrumb" className="vx-backlink" style={{ gap: 10 }}>

@@ -166,7 +166,7 @@ export default function CheckoutPage() {
   const payLabel = subtotalPaise <= 0 ? "Cart unavailable" : method === "COD" ? "Place COD order" : "Continue to secure payment";
 
   return (
-    <main className="min-h-screen bg-[#F5F7F3]">
+    <main className="vx-store-page">
       <StorefrontHeader />
       <div className="vx-page vx-page--mid">
         <Link href="/cart" className="vx-backlink">

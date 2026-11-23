@@ -45,7 +45,7 @@ export default function HelpPage() {
   return (
     <>
       <StorefrontHeader />
-      <main className="min-h-[65vh] bg-[#F5F7F3]">
+      <main className="vx-store-page">
         <div className="vx-page vx-page--mid">
           <PageHeader
             kicker="VEXAUSE LABS · Customer help"

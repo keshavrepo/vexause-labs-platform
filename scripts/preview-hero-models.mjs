@@ -30,6 +30,7 @@ execFileSync(
   path.join(root, "node_modules/.bin/tsc"),
   [
     "components/hero/HeroModels.ts",
+    "components/hero/stage.ts",
     "--outDir", buildDir,
     "--module", "es2020",
     "--target", "es2020",
@@ -42,6 +43,7 @@ execFileSync(
 
 const THREE = await import("three");
 const models = await import(path.join(buildDir, "HeroModels.js"));
+const stage = await import(path.join(buildDir, "stage.js"));
 
 /* ------------------------------ PNG writer ------------------------------ */
 
@@ -298,48 +300,92 @@ for (const shot of shots) {
 
 const collection = [dragon, car, vase, robot];
 
-// staged composition at the hero camera framing
-// Mirrors components/HeroProductScene.tsx (FEATURED scale + SUPPORT ratio).
-const FEATURED = [0.72, 0.78, 0.82, 0.84];
-const SUPPORT = 0.56;
-const stageLayout = (featured) => {
-  const poses = [];
-  for (let slot = 0; slot < 4; slot += 1) {
-    const index = (featured + slot) % 4;
-    if (slot === 0) poses[index] = { x: 0, y: 0, z: 0.35, scale: FEATURED[index], rotation: -0.28 };
-    else if (slot === 1) poses[index] = { x: 2.28, y: 0, z: -2, scale: FEATURED[index] * SUPPORT, rotation: 0.5 };
-    else if (slot === 2) poses[index] = { x: -2.28, y: 0, z: -2, scale: FEATURED[index] * SUPPORT, rotation: -0.52 };
-    else poses[index] = { x: 0.2, y: -8, z: -13, scale: FEATURED[index] * 0.3, rotation: 0.1 };
+/* Composition and framing come from components/hero/stage.ts — the same module
+ * the WebGL scene imports — so these previews cannot drift from what ships. */
+const heroBackground = [0x0b / 255, 0x14 / 255, 0x11 / 255];
+
+function stageScene(featured, width, height) {
+  const aspect = width / height;
+  const framing = stage.heroCamera(aspect);
+  const poses = stage.stagePoses(featured, aspect);
+  const studies = stage.stageStudies(aspect);
+  const objects = [];
+
+  collection.forEach((model, index) => {
+    const pose = poses[index];
+    model.position.set(pose.x, pose.y, pose.z);
+    model.scale.setScalar(pose.scale);
+    model.rotation.set(0, pose.rotation, 0);
+    objects.push(model);
+  });
+
+  studies.forEach((study, index) => {
+    const clone = collection[study.model].clone(true);
+    clone.name = `study-${index}`;
+    clone.position.set(study.x, study.y, study.z);
+    clone.scale.setScalar(study.scale);
+    clone.rotation.set(0, study.rotation, 0);
+    objects.push(clone);
+  });
+
+  /* Report the projected footprint of every object so the staging numbers can
+   * be checked against the frame instead of guessed. */
+  const camera = new THREE.PerspectiveCamera(framing.fov, aspect, 0.1, 200);
+  camera.position.set(...framing.position);
+  camera.lookAt(new THREE.Vector3(...framing.target));
+  camera.updateMatrixWorld(true);
+  camera.updateProjectionMatrix();
+  const report = objects.map((object) => {
+    object.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(object);
+    let minX = 1,
+      maxX = 0,
+      minY = 1,
+      maxY = 0;
+    for (let i = 0; i < 8; i += 1) {
+      const v = new THREE.Vector3(
+        i & 1 ? box.max.x : box.min.x,
+        i & 2 ? box.max.y : box.min.y,
+        i & 4 ? box.max.z : box.min.z,
+      ).project(camera);
+      minX = Math.min(minX, (v.x + 1) / 2);
+      maxX = Math.max(maxX, (v.x + 1) / 2);
+      minY = Math.min(minY, (1 - v.y) / 2);
+      maxY = Math.max(maxY, (1 - v.y) / 2);
+    }
+    return { name: object.name || "object", minX, maxX, minY, maxY };
+  });
+
+  return {
+    report,
+    objects,
+    options: {
+      cameraPos: new THREE.Vector3(...framing.position),
+      target: new THREE.Vector3(...framing.target),
+      fov: framing.fov,
+      width,
+      height,
+      background: heroBackground,
+    },
+  };
+}
+
+for (const [file, featured, width, height] of [
+  ["00-stage-wide.png", 0, 1440, 760],
+  ["00-stage-vase.png", 2, 1440, 760],
+  ["00-stage-tablet.png", 0, 1024, 700],
+  ["00-stage-narrow.png", 0, 390, 430],
+]) {
+  const scene = stageScene(featured, width, height);
+  const started = Date.now();
+  const { png, triangles } = render(scene.objects, scene.options);
+  for (const item of scene.report) {
+    console.log(
+      `  ${item.name.padEnd(10)} x ${item.minX.toFixed(2)}–${item.maxX.toFixed(2)}  y ${item.minY.toFixed(2)}–${item.maxY.toFixed(2)}`,
+    );
   }
-  return poses;
-};
-
-const plinth = new THREE.Mesh(
-  new THREE.CircleGeometry(3.25, 96),
-  new THREE.MeshBasicMaterial({ color: 0x15251e }),
-);
-plinth.rotation.x = -Math.PI / 2;
-plinth.position.y = -0.001;
-
-const layout = stageLayout(0);
-collection.forEach((model, index) => {
-  model.position.set(layout[index].x, layout[index].y, layout[index].z);
-  model.scale.setScalar(layout[index].scale);
-  model.rotation.set(0, layout[index].rotation, 0);
-});
-const hero = render([...collection, plinth], { cameraPos: new THREE.Vector3(0, 1.95, 6.7), target: new THREE.Vector3(0, 1.02, 0), fov: 32, width: 900, height: 700 });
-writePng(path.join(shotDir, "00-stage.png"), 900, 700, hero.png);
-console.log("rendered 00-stage.png with ground disc at hero camera framing");
-
-// second scene: vase featured
-const layout2 = stageLayout(2);
-collection.forEach((model, index) => {
-  model.position.set(layout2[index].x, layout2[index].y, layout2[index].z);
-  model.scale.setScalar(layout2[index].scale);
-  model.rotation.set(0, layout2[index].rotation, 0);
-});
-const hero2 = render([...collection, plinth], { cameraPos: new THREE.Vector3(0, 1.95, 6.7), target: new THREE.Vector3(0, 1.02, 0), fov: 32, width: 900, height: 700 });
-writePng(path.join(shotDir, "00-stage-vase.png"), 900, 700, hero2.png);
-console.log("rendered 00-stage-vase.png");
+  writePng(path.join(shotDir, file), width, height, png);
+  console.log(`rendered ${file} · ${width}×${height} · ${triangles} triangles · ${Date.now() - started}ms`);
+}
 
 console.log(`\nPreviews written to ${path.relative(root, shotDir)}/`);

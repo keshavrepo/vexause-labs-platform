@@ -3,15 +3,38 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { ShopProduct } from "@/lib/shop-types";
 import Reveal from "@/components/Reveal";
 
 type Category = { id: string; name: string; slug: string };
 
 const money = (paise: number) => new Intl.NumberFormat("en-IN", {
-  style: "currency", currency: "INR", maximumFractionDigits: 2,
+  style: "currency", currency: "INR", maximumFractionDigits: 0,
 }).format(paise / 100);
+
+const LAYOUT = ["lead", "tall", "tall", "wide"] as const;
+
+function ProductMedia({ product, priority }: { product: ShopProduct; priority: boolean }) {
+  const image = product.images?.[0];
+  if (image?.url) {
+    return (
+      <Image
+        src={image.url}
+        alt={image.altText || product.name}
+        fill
+        priority={priority}
+        sizes="(min-width: 1100px) 42vw, (min-width: 720px) 30vw, 92vw"
+        className="vx-feature-card__img"
+      />
+    );
+  }
+  return (
+    <div className="vx-feature-card__placeholder" aria-hidden="true">
+      <span>{product.name.slice(0, 2).toUpperCase()}</span>
+    </div>
+  );
+}
 
 export default function HomeCatalogSections() {
   const [products, setProducts] = useState<ShopProduct[]>([]);
@@ -22,13 +45,13 @@ export default function HomeCatalogSections() {
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/products?limit=4&sort=newest", { signal: controller.signal })
-      .then(async response => {
+      .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Catalogue unavailable");
         setProducts(Array.isArray(data.products) ? data.products : []);
         setCategories(Array.isArray(data.categories) ? data.categories : []);
       })
-      .catch(error => {
+      .catch((error) => {
         if (error instanceof Error && error.name !== "AbortError") setUnavailable(true);
       })
       .finally(() => {
@@ -37,61 +60,105 @@ export default function HomeCatalogSections() {
     return () => controller.abort();
   }, []);
 
-  return <>
-    <section id="collection" className="vxl-home-section vxl-home-section--soft" aria-labelledby="vxl-categories-title">
-      <div className="vxl-section-shell">
-        <Reveal>
-          <div className="vxl-section-heading">
-            <div>
-              <p className="eyebrow">Explore the catalogue</p>
-              <h2 id="vxl-categories-title">Small-batch forms.<br/>Made to be kept.</h2>
-            </div>
-            <p>Browse the products and categories currently available from VEXAUSE LABS.</p>
+  return (
+    <section id="collection" className="vx-section vx-section--soft" aria-labelledby="vx-collection-title">
+      <div className="vx-shell">
+        <Reveal className="vx-head">
+          <div>
+            <p className="vx-kicker">The catalogue</p>
+            <h2 id="vx-collection-title">
+              Small-batch forms,
+              <br />
+              <em>made to be kept.</em>
+            </h2>
           </div>
-          {categories.length > 0 && <div className="vxl-category-list" aria-label="Product categories">
-            {categories.map(category => <Link className="vxl-category-pill" key={category.id} href={`/shop?category=${encodeURIComponent(category.slug)}`}>{category.name}</Link>)}
-          </div>}
+          <div className="vx-head__aside">
+            <p>
+              Original 3D-printed objects, produced in the studio and listed with live stock. Prices are recalculated on
+              the server when you check out.
+            </p>
+            {categories.length > 0 ? (
+              <div className="vx-chip-row" aria-label="Product categories">
+                {categories.slice(0, 6).map((category) => (
+                  <Link className="vx-chip vx-chip--link" key={category.id} href={`/shop?category=${encodeURIComponent(category.slug)}`}>
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </Reveal>
-      </div>
-    </section>
 
-    <section className="vxl-home-section" aria-labelledby="vxl-featured-title">
-      <div className="vxl-section-shell">
-        <Reveal>
-          <div className="vxl-section-heading">
-            <div>
-              <p className="eyebrow">From the current collection</p>
-              <h2 id="vxl-featured-title">Featured creations.</h2>
-            </div>
-            <Link href="/shop" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#173D32]">Explore the store <ArrowUpRight size={16}/></Link>
+        <div className="vx-feature-head">
+          <p>From the current collection</p>
+          <Link href="/shop" className="vx-link-arrow">
+            All products <ArrowUpRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="vx-feature-grid" aria-label="Loading featured products" aria-busy="true">
+            {LAYOUT.map((shape, index) => (
+              <div key={index} className={`vx-feature-card vx-feature-card--${shape} vx-feature-card--loading`}>
+                <div className="vx-feature-card__media vx-skeleton" />
+                <div className="vx-feature-card__body">
+                  <div className="vx-skeleton" style={{ height: 9, width: "38%" }} />
+                  <div className="vx-skeleton" style={{ height: 18, width: "72%", marginTop: 12 }} />
+                </div>
+              </div>
+            ))}
           </div>
-        </Reveal>
-        {loading ? <div className="vxl-featured-grid" aria-label="Loading featured products">
-          {Array.from({ length: 4 }, (_, index) => <div key={index} className="vxl-product-card" aria-hidden="true"><div className="vxl-product-card__image animate-pulse bg-[#e8ede5]"/><div className="p-5"><div className="h-3 w-1/3 animate-pulse rounded-full bg-[#e6ebe4]"/><div className="mt-4 h-4 w-3/4 animate-pulse rounded-full bg-[#e6ebe4]"/></div></div>)}
-        </div> : products.length > 0 ? <div className="vxl-featured-grid vxl-grid-stagger">
-          {products.map(product => <Reveal key={product.id}>
-            <article className="vxl-product-card">
-              <Link href={`/product/${product.slug}`} className="block" aria-label={`View ${product.name}`}>
-                <div className="vxl-product-card__image">
-                  {product.images?.[0]?.url
-                    ? <Image src={product.images[0].url} alt={product.images[0].altText || product.name} fill sizes="(min-width: 1100px) 25vw, (min-width: 640px) 50vw, 50vw" className="object-cover"/>
-                    : <div className="vxl-product-placeholder" aria-hidden="true"><span>VXL</span></div>}
-                </div>
-                <div className="vxl-product-card__body">
-                  <p className="!mt-0 text-[10px] font-bold uppercase tracking-[.16em]">{product.category?.name || "VEXAUSE LABS"}</p>
-                  <h3>{product.name}</h3>
-                  <p>{product.shortDescription}</p>
-                  <div className="vxl-product-card__meta"><span>{money(product.pricePaise)}</span><ArrowRight size={16}/></div>
-                </div>
-              </Link>
-            </article>
-          </Reveal>)}
-        </div> : <div className="vxl-collection-state">
-          <p className="font-semibold text-[#173D32]">{unavailable ? "The collection is unavailable right now." : "No products are available to feature yet."}</p>
-          <p className="mt-2 text-sm">Visit the store to browse the current catalogue.</p>
-          <Link className="mt-4 inline-flex min-h-10 items-center gap-2 font-bold text-[#173D32]" href="/shop">Browse the store <ArrowUpRight size={15}/></Link>
-        </div>}
+        ) : products.length > 0 ? (
+          <div className="vx-feature-grid">
+            {products.slice(0, 4).map((product, index) => {
+              const shape = LAYOUT[index] ?? "tall";
+              const showCopy = shape === "lead" || shape === "wide";
+              return (
+                <Reveal key={product.id} className={`vx-feature-card vx-feature-card--${shape}`} delay={index * 90} as="article">
+                  <Link href={`/product/${product.slug}`} className="vx-feature-card__link" aria-label={`View ${product.name}`}>
+                    <div className="vx-feature-card__media">
+                      <ProductMedia product={product} priority={index === 0} />
+                      <span className="vx-feature-card__arrow" aria-hidden="true">
+                        <ArrowUpRight size={16} />
+                      </span>
+                    </div>
+                    <div className="vx-feature-card__body">
+                      <p className="vx-feature-card__kicker">{product.category?.name || "VEXAUSE LABS"}</p>
+                      <h3 className="vx-feature-card__name">{product.name}</h3>
+                      {showCopy && product.shortDescription ? (
+                        <p className="vx-feature-card__copy">{product.shortDescription}</p>
+                      ) : null}
+                      <div className="vx-feature-card__meta">
+                        <span>{money(product.pricePaise)}</span>
+                        {product.compareAtPaise && product.compareAtPaise > product.pricePaise ? (
+                          <s>{money(product.compareAtPaise)}</s>
+                        ) : null}
+                        <span className="vx-feature-card__stock">
+                          {product.available === false ? "Unavailable" : product.hasVariants ? "Options" : "In studio"}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="vx-feature-empty">
+            <p className="vx-feature-empty__title">
+              {unavailable ? "The collection is unavailable right now." : "No products are listed yet."}
+            </p>
+            <p className="vx-small vx-muted">
+              {unavailable
+                ? "The catalogue could not be loaded. The store may still be reachable directly."
+                : "New pieces appear here as soon as they are published in the studio."}
+            </p>
+            <Link href="/shop" className="vx-btn vx-btn--sm">
+              Browse the store <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
-  </>;
+  );
 }

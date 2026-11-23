@@ -99,7 +99,7 @@ export default function Custom3DPrintingPage() {
   return (
     <>
       <StorefrontHeader />
-      <main className="vxl-custom-page">
+      <main className="vx-custom-page">
         <div className="vx-page">
           <PageHeader
             kicker="VEXAUSE LABS · Custom programme"

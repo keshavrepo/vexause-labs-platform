@@ -2,8 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
-export default function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
+export default function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  as: Tag = "div",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  as?: "div" | "section" | "li" | "article";
+}) {
+  const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const element = ref.current;
@@ -20,5 +30,13 @@ export default function Reveal({ children, className = "" }: { children: React.R
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={ref} className={`vxl-reveal ${className}`.trim()}>{children}</div>;
+  return (
+    <Tag
+      ref={ref as never}
+      className={`vxl-reveal ${className}`.trim()}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </Tag>
+  );
 }

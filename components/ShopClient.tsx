@@ -133,9 +133,9 @@ export function ShopProductCard({
   const image = product.images?.[0];
   const soldOut = product.available === false;
   return (
-    <article className="vxl-product-card vxl-shop-card">
-      <div className="vxl-product-card__image">
-        <Link href={`/product/${product.slug}`} aria-label={`View ${product.name}`} className="absolute inset-0 z-[1]">
+    <article className="vx-product-card">
+      <div className="vx-product-card__media">
+        <Link href={`/product/${product.slug}`} aria-label={`View ${product.name}`} className="vx-product-card__link">
           {image?.url ? (
             <Image
               src={image.url}
@@ -143,7 +143,7 @@ export function ShopProductCard({
               fill
               priority={priority}
               sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover"
+              className="vx-product-card__img"
             />
           ) : (
             <span className="vxl-product-placeholder" aria-hidden="true">
@@ -156,38 +156,34 @@ export function ShopProductCard({
           onClick={onToggleWish}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           aria-pressed={saved}
-          className="vxl-card-heart"
+          className="vx-card-heart"
         >
           <Heart size={16} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
         </button>
-        {soldOut ? <span className="vxl-card-flag">Sold out</span> : null}
+        {soldOut ? <span className="vx-card-flag">Sold out</span> : null}
       </div>
-      <div className="vxl-product-card__body">
-        <p className="!mt-0 text-[9px] font-bold uppercase tracking-[.16em] text-[#789681]">
-          {product.category?.name || "VEXAUSE LABS"}
-        </p>
-        <h2 className="mt-1.5 text-[15px] font-semibold leading-snug tracking-[-.01em] text-[#173D32]">
+      <div className="vx-product-card__body">
+        <p className="vx-product-card__eyebrow">{product.category?.name || "VEXAUSE LABS"}</p>
+        <h2 className="vx-product-card__title">
           <Link href={`/product/${product.slug}`}>{product.name}</Link>
         </h2>
-        {product.shortDescription ? (
-          <p className="mt-1.5 line-clamp-2 text-[11.5px] leading-5 text-[#718078]">{product.shortDescription}</p>
-        ) : null}
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-[15px] font-bold text-[#173D32]">{money(product.pricePaise)}</span>
+        {product.shortDescription ? <p className="vx-product-card__desc">{product.shortDescription}</p> : null}
+        <div className="vx-product-card__price">
+          <span>{money(product.pricePaise)}</span>
           {product.compareAtPaise && product.compareAtPaise > product.pricePaise ? (
-            <span className="text-[11px] text-[#98a39a] line-through">{money(product.compareAtPaise)}</span>
+            <s>{money(product.compareAtPaise)}</s>
           ) : null}
         </div>
-        <div className="mt-3.5 grid grid-cols-2 gap-2">
+        <div className="vx-product-card__actions">
           <button
             type="button"
             onClick={onAdd}
             disabled={soldOut || !!product.hasVariants}
-            className="vx-btn vx-btn--primary vx-btn--sm w-full"
+            className="vx-btn vx-btn--primary vx-btn--sm"
           >
             {soldOut ? "Sold out" : product.hasVariants ? "Choose options" : "Add to cart"}
           </button>
-          <Link href={`/product/${product.slug}`} className="vx-btn vx-btn--sm w-full">
+          <Link href={`/product/${product.slug}`} className="vx-btn vx-btn--sm">
             Details
           </Link>
         </div>
@@ -270,7 +266,7 @@ export function ShopPageClient() {
   const filtersUsed = Boolean(search || category || minPrice || maxPrice || inStockOnly);
 
   return (
-    <main className="vxl-store-page min-h-screen">
+    <main className="vx-store-page min-h-screen">
       <StorefrontHeader cartCount={state.ready ? count : null} wishlistCount={state.ready ? state.wishlist.length : null} />
       <div className="vx-page">
         <header className="vx-page-head">
@@ -409,7 +405,7 @@ export function ShopPageClient() {
         ) : null}
 
         {loading ? (
-          <div className="vxl-product-grid" style={{ marginTop: 24 }} aria-busy="true" aria-live="polite">
+          <div className="vx-product-grid" style={{ marginTop: 24 }} aria-busy="true" aria-live="polite">
             {Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="vx-panel" style={{ overflow: "hidden" }}>
                 <div className="vx-skeleton" style={{ aspectRatio: "1 / 1.02", borderRadius: 0 }} />
@@ -435,7 +431,7 @@ export function ShopPageClient() {
             />
           </div>
         ) : (
-          <div className="vxl-product-grid" style={{ marginTop: 24 }}>
+          <div className="vx-product-grid" style={{ marginTop: 24 }}>
             {products.map((p, index) => (
               <ShopProductCard
                 key={p.id}
@@ -547,7 +543,7 @@ export function CartPageClient() {
   const readyToCheckout = cartSync === "synced" && lines.length > 0;
 
   return (
-    <main className="vxl-store-page min-h-screen">
+    <main className="vx-store-page min-h-screen">
       <StorefrontHeader cartCount={state.ready ? itemCount : null} wishlistCount={state.ready ? state.wishlist.length : null} />
       <div className="vx-page">
         <Link href="/shop" className="vx-backlink">
@@ -570,7 +566,7 @@ export function CartPageClient() {
           </div>
         </header>
 
-        <div className="vxl-cart-layout">
+        <div className="vx-cart-layout">
           <Panel flush>
             {!state.ready || productsLoading ? (
               <div style={{ padding: 22, display: "grid", gap: 14 }} aria-busy="true">
@@ -676,7 +672,7 @@ export function CartPageClient() {
             )}
           </Panel>
 
-          <aside className="vxl-order-summary vx-order-aside">
+          <aside className="vx-order-aside">
             <Panel title="Order summary" meta="Shipping and taxes are confirmed server-side at checkout.">
               <div className="vx-summary">
                 <div className="vx-summary__row">
@@ -773,7 +769,7 @@ export function WishlistPageClient() {
   const itemCount = state.cart.reduce((n, x) => n + x.quantity, 0);
 
   return (
-    <main className="vxl-store-page min-h-screen">
+    <main className="vx-store-page min-h-screen">
       <StorefrontHeader cartCount={state.ready ? itemCount : null} wishlistCount={state.ready ? state.wishlist.length : null} />
       <div className="vx-page">
         <Link href="/shop" className="vx-backlink">
@@ -803,7 +799,7 @@ export function WishlistPageClient() {
             action={<Link href="/shop" className="vx-btn vx-btn--primary vx-btn--sm">Explore the collection</Link>}
           />
         ) : (
-          <div className="vxl-wishlist-grid">
+          <div className="vx-wishlist-grid">
             {saved.map((p) => (
               <ShopProductCard
                 key={p.id}

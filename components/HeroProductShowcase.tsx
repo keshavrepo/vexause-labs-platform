@@ -7,7 +7,15 @@ type SceneProps = { onReady: () => void; onSceneChange: (scene: number) => void 
 type SceneComponent = ComponentType<SceneProps>;
 
 const sceneNames = ["Articulated dragon", "Miniature car", "Ribbed designer vase", "Robot collectible"];
+const sceneNotes = ["Matte PLA · articulated", "Satin PLA · two-tone", "Ceramic finish · fluted", "Matte PLA · jointed"];
 
+/**
+ * Full-bleed hero stage.
+ *
+ * The canvas covers the whole hero section rather than living in a card, so the
+ * products share the page background and there is no frame to see. Only the two
+ * small labels are laid over the scene.
+ */
 export default function HeroProductShowcase() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [Scene, setScene] = useState<SceneComponent | null>(null);
@@ -44,7 +52,7 @@ export default function HeroProductShowcase() {
         observer.disconnect();
         void loadScene();
       }
-    }, { rootMargin: "120px" });
+    }, { rootMargin: "160px" });
     observer.observe(host);
     return () => {
       disposed = true;
@@ -52,21 +60,31 @@ export default function HeroProductShowcase() {
     };
   }, []);
 
-  return <div ref={hostRef} className={`vxl-hero-visual${ready ? " is-ready" : ""}`} role="img" aria-label={`Animated 3D product showcase: ${sceneNames[activeScene]}, with a car, vase and robot collectible`}>
-    <div className={`vxl-showcase-fallback${ready ? " is-hidden" : ""}`}>
-      <HeroProductFallback/>
+  return (
+    <div
+      ref={hostRef}
+      className={`vx-hero__stage${ready ? " is-ready" : ""}`}
+      role="img"
+      aria-label={`Animated 3D product study: ${sceneNames[activeScene].toLowerCase()}, staged with a dragon, car, vase and robot collectible at different depths`}
+    >
+      <div className={`vx-hero__fallback${ready ? " is-hidden" : ""}`} aria-hidden="true">
+        <HeroProductFallback />
+      </div>
+      {Scene ? <Scene onReady={onReady} onSceneChange={onSceneChange} /> : null}
+
+      <div className="vx-hero__tag" aria-hidden="true">
+        <span className="vx-hero__tag-dot" />
+        Original 3D product studies
+      </div>
+
+      <div className="vx-hero__caption" aria-hidden="true">
+        <span className="vx-hero__caption-index">0{activeScene + 1}<i>/04</i></span>
+        <span className="vx-hero__caption-rule" />
+        <span>
+          <b>{sceneNames[activeScene]}</b>
+          <em>{sceneNotes[activeScene]}</em>
+        </span>
+      </div>
     </div>
-    {Scene && <Scene onReady={onReady} onSceneChange={onSceneChange}/>}
-    <div className="vxl-showcase-annotation vxl-showcase-annotation--top" aria-hidden="true">
-      <span className="vxl-showcase-annotation__dot"/>
-      <span>ORIGINAL 3D PRODUCT STUDIES</span>
-    </div>
-    <div className="vxl-showcase-caption" aria-hidden="true">
-      <span className="vxl-showcase-caption__index">0{activeScene + 1} / 04</span>
-      <span className="vxl-showcase-caption__rule"/>
-      <span className="vxl-showcase-caption__text">{sceneNames[activeScene]}</span>
-      <span className="vxl-showcase-caption__material">PLA-STYLE · LAYER DETAIL</span>
-    </div>
-    <span className="vxl-showcase-annotation vxl-showcase-annotation--side" aria-hidden="true">FORM / MATERIAL / MOTION</span>
-  </div>;
+  );
 }

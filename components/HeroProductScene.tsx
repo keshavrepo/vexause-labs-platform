@@ -3,41 +3,40 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createCollection, disposeObject } from "@/components/hero/HeroModels";
+import { heroCamera, stagePoses, stageStudies, type Pose } from "@/components/hero/stage";
 
 type Props = { onReady: () => void; onSceneChange: (scene: number) => void };
 
 /**
  * Studio staging for the VEXAUSE LABS hero.
  *
- * Composition: one featured product front-and-centre on a machined plinth,
- * two supporting pieces staged back-left and back-right at a consistent
- * collection scale, and the fourth waiting off-stage. Rotating the collection
- * promotes the next product with a damped, staggered move — no cuts, no bounce.
+ * The canvas is transparent and framed to the hero section itself, so the
+ * rendered products share the page background instead of sitting in a panel.
+ * There is deliberately no ground plane, backdrop plane or haze card: those
+ * were the surfaces that produced a visible rectangular edge where the scene
+ * met the page. Grounding now comes from small, per-product contact shadows
+ * that fade out well before the canvas boundary.
+ *
+ * Six objects are staged at three depths: one featured piece, two mid-ground
+ * supports, one far support and two small background studies. Every object
+ * carries its own float speed, phase and yaw speed, and the featured slot is
+ * promoted on a slow timed cycle with a staggered, damped move.
  */
 
-type Pose = { x: number; y: number; z: number; scale: number; rotation: number };
 type Motion = { from: Pose; to: Pose; start: number; duration: number };
+type Layer = "featured" | "mid" | "far";
 
-/** Each product's featured scale, tuned so all four read at a similar presence. */
-const FEATURED = [0.72, 0.78, 0.82, 0.84];
-const SUPPORT = 0.56;
+const LAYERS: Layer[] = ["featured", "mid", "mid", "far"];
 
-const stageLayout = (featured: number): Pose[] => {
-  const poses: Pose[] = [];
-  for (let slot = 0; slot < 4; slot += 1) {
-    const index = (featured + slot) % 4;
-    if (slot === 0) {
-      poses[index] = { x: 0, y: 0, z: 0.35, scale: FEATURED[index], rotation: -0.28 };
-    } else if (slot === 1) {
-      poses[index] = { x: 2.28, y: 0, z: -2, scale: FEATURED[index] * SUPPORT, rotation: 0.5 };
-    } else if (slot === 2) {
-      poses[index] = { x: -2.28, y: 0, z: -2, scale: FEATURED[index] * SUPPORT, rotation: -0.52 };
-    } else {
-      poses[index] = { x: 0.2, y: -8, z: -13, scale: FEATURED[index] * 0.3, rotation: 0.1 };
-    }
-  }
-  return poses;
-};
+/** Independent ambient motion per staged object. */
+const DRIFT = [
+  { bob: 0.022, bobSpeed: 0.62, phase: 0.0, yaw: 0.22, yawSpeed: 0.22 },
+  { bob: 0.014, bobSpeed: 0.78, phase: 1.7, yaw: 0.07, yawSpeed: 0.17 },
+  { bob: 0.017, bobSpeed: 0.54, phase: 3.1, yaw: 0.09, yawSpeed: 0.13 },
+  { bob: 0.02, bobSpeed: 0.7, phase: 4.6, yaw: 0.12, yawSpeed: 0.1 },
+  { bob: 0.013, bobSpeed: 0.85, phase: 2.4, yaw: 0.16, yawSpeed: 0.19 },
+  { bob: 0.011, bobSpeed: 0.66, phase: 5.3, yaw: 0.1, yawSpeed: 0.12 },
+];
 
 function radialTexture(stops: Array<[number, string]>, size = 256) {
   const canvas = document.createElement("canvas");
@@ -54,7 +53,7 @@ function radialTexture(stops: Array<[number, string]>, size = 256) {
   return texture;
 }
 
-/** A tiny emissive studio used as the reflection environment. */
+/** A tiny emissive studio used as the reflection environment (never rendered). */
 function studioEnvironment(renderer: THREE.WebGLRenderer) {
   const env = new THREE.Scene();
   env.background = new THREE.Color(0x0c1a15);
@@ -99,6 +98,7 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
       renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
+        premultipliedAlpha: true,
         antialias: !compact || window.devicePixelRatio < 2,
         powerPreference: "high-performance",
         preserveDrawingBuffer: false,
@@ -110,16 +110,17 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(compact ? 40 : 32, 1, 0.2, 60);
-    const cameraTarget = new THREE.Vector3(0, 1.02, 0);
-    const cameraBase = new THREE.Vector3(0, compact ? 2.05 : 1.95, compact ? 8.6 : 6.7);
+    scene.background = null;
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.2, 80);
+    const cameraTarget = new THREE.Vector3(-1.15, 0.82, 0);
+    const cameraBase = new THREE.Vector3(0, 1.35, 6.2);
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compact ? 1.5 : 2));
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.02;
+    renderer.toneMappingExposure = 1.04;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -131,14 +132,14 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
     const key = new THREE.DirectionalLight(0xfff2dc, 2.7);
     key.position.set(-4.2, 6.4, 5.2);
     key.castShadow = true;
-    const shadowSize = compact ? 1024 : 2048;
+    const shadowSize = compact ? 1024 : 1536;
     key.shadow.mapSize.set(shadowSize, shadowSize);
-    key.shadow.camera.left = -5.2;
-    key.shadow.camera.right = 5.2;
-    key.shadow.camera.top = 5.6;
-    key.shadow.camera.bottom = -3.2;
+    key.shadow.camera.left = -6.4;
+    key.shadow.camera.right = 6.4;
+    key.shadow.camera.top = 6.2;
+    key.shadow.camera.bottom = -3.6;
     key.shadow.camera.near = 1;
-    key.shadow.camera.far = 22;
+    key.shadow.camera.far = 26;
     key.shadow.bias = -0.0006;
     key.shadow.normalBias = 0.02;
     key.shadow.radius = 4;
@@ -154,76 +155,83 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
 
     scene.add(new THREE.HemisphereLight(0xdfeee3, 0x0d1712, 0.75));
 
-    /* ----------------------------- staging ------------------------------ */
-    // Ground: a soft disc that fades into the page instead of a hard plinth edge.
-    const groundTexture = radialTexture([
-      [0, "rgba(21,37,30,0.96)"],
-      [0.55, "rgba(19,33,27,0.82)"],
-      [0.82, "rgba(15,27,22,0.34)"],
-      [1, "rgba(12,22,18,0)"],
-    ], 512);
-    if (groundTexture) {
-      const ground = new THREE.Mesh(
-        new THREE.CircleGeometry(3.25, 96),
-        new THREE.MeshBasicMaterial({ map: groundTexture, transparent: true, depthWrite: false }),
-      );
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = 0;
-      scene.add(ground);
-    }
-
-    const contactTexture = radialTexture([
-      [0, "rgba(0,0,0,0.55)"],
-      [0.45, "rgba(0,0,0,0.22)"],
-      [1, "rgba(0,0,0,0)"],
-    ]);
-    if (contactTexture) {
-      const contact = new THREE.Mesh(
-        new THREE.PlaneGeometry(4.4, 4.4),
-        new THREE.MeshBasicMaterial({ map: contactTexture, transparent: true, opacity: 0.75, depthWrite: false }),
-      );
-      contact.rotation.x = -Math.PI / 2;
-      contact.position.y = 0.016;
-      scene.add(contact);
-    }
-
-    const hazeTexture = radialTexture([
-      [0, "rgba(146,205,168,0.34)"],
-      [0.5, "rgba(96,158,128,0.12)"],
-      [1, "rgba(0,0,0,0)"],
-    ]);
-    if (hazeTexture) {
-      const haze = new THREE.Mesh(
-        new THREE.PlaneGeometry(14, 9),
-        new THREE.MeshBasicMaterial({ map: hazeTexture, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }),
-      );
-      haze.position.set(0, 2.1, -7.2);
-      scene.add(haze);
-    }
-
     /* ------------------------------ models ------------------------------ */
-    const models = createCollection();
+    // Four originals plus two depth duplicates (a vase study and a car study).
+    // Duplicates share geometry and materials with their original, and are
+    // skipped during disposal so shared buffers are only released once.
+    const originals = createCollection();
+    const vaseClone = originals[2].clone(true);
+    const carClone = originals[1].clone(true);
+    vaseClone.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.castShadow = false;
+    });
+    carClone.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.castShadow = false;
+    });
+    const models = [...originals, vaseClone, carClone];
+    const shared = new Set(originals);
+
+    const shadowTexture = radialTexture([
+      [0, "rgba(3,9,7,0.5)"],
+      [0.45, "rgba(3,9,7,0.24)"],
+      [0.78, "rgba(3,9,7,0.05)"],
+      [1, "rgba(3,9,7,0)"],
+    ], 256);
+
+    const contactShadows = models.map((model) => {
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false, opacity: 0 }),
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.y = 0.004;
+      mesh.renderOrder = -1;
+      scene.add(mesh);
+      return mesh;
+    });
+
+    const motion: Pose[] = [];
     const poses: Motion[] = [];
-    const motion = models.map(() => ({ x: 0, y: 0, z: 0, scale: 1, rotation: 0 }));
     let currentScene = 0;
-    const initial = stageLayout(0);
+
+    // Narrow layouts put the stage in its own band under the copy, so the
+    // collection is staged twice: a wide arc to the right of the type, and a
+    // centred arrangement that fills the band. Track which one is live so a
+    // rotation or window resize can re-stage smoothly.
+    let stagingAspect = host.clientWidth / Math.max(1, host.clientHeight) || 1.895;
+    const initial = stagePoses(0, stagingAspect);
+    const initialStudies = stageStudies(stagingAspect);
+
+    /** Point every model at the staging for the current scene and layout. */
+    const retarget = (elapsed: number, smooth: boolean) => {
+      const next = stagePoses(currentScene, stagingAspect);
+      const studies = stageStudies(stagingAspect);
+      for (let index = 0; index < models.length; index += 1) {
+        const target = index < 4 ? next[index] : studies[index - 4];
+        poses[index] = {
+          from: smooth ? { ...motion[index] } : { ...target },
+          to: { ...target },
+          start: smooth ? elapsed + index * 0.09 : 0,
+          duration: smooth ? 1.7 : 1,
+        };
+      }
+    };
 
     models.forEach((model, index) => {
+      const role = index < 4 ? LAYERS[index] : "far";
       model.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.castShadow = true;
-          object.receiveShadow = true;
-          // small details do not need to write to the shadow map
-          const material = Array.isArray(object.material) ? object.material[0] : object.material;
-          if (object.geometry.boundingSphere === null) object.geometry.computeBoundingSphere();
-          const radius = object.geometry.boundingSphere?.radius ?? 0.1;
-          if (radius < 0.045) object.castShadow = false;
-        }
+        if (!(object instanceof THREE.Mesh)) return;
+        object.castShadow = role !== "far";
+        object.receiveShadow = role !== "far";
+        if (object.geometry.boundingSphere === null) object.geometry.computeBoundingSphere();
+        const radius = object.geometry.boundingSphere?.radius ?? 0.1;
+        if (radius < 0.05) object.castShadow = false;
       });
-      const target = initial[index];
-      const entry = { ...target, y: -0.6, scale: target.scale * 0.82, rotation: target.rotation - 0.35 };
+
+      const target = index < 4 ? initial[index] : initialStudies[index - 4];
+      const entry = { ...target, y: -0.5, scale: target.scale * 0.86, rotation: target.rotation - 0.3 };
       motion[index] = entry;
-      poses[index] = { from: { ...entry }, to: { ...target }, start: 0.15 + index * 0.1, duration: 1.5 };
+      poses[index] = { from: { ...entry }, to: { ...target }, start: 0.15 + index * 0.09, duration: 1.6 };
       scene.add(model);
     });
 
@@ -233,11 +241,24 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
       const width = Math.max(1, bounds.width);
       const height = Math.max(1, bounds.height);
       renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      // pull the camera back on narrow canvases so nothing clips
-      const compensation = camera.aspect < 1.15 ? 1 + (1.15 - camera.aspect) * 0.85 : 1;
-      camera.position.set(cameraBase.x, cameraBase.y * compensation, cameraBase.z * compensation);
+      const aspect = width / height;
+      camera.aspect = aspect;
+
+      // Wide layouts hold the copy on the left, so the camera looks left of the
+      // collection to push it into the right of frame. Narrow layouts centre it.
+      const framing = heroCamera(aspect);
+      camera.fov = framing.fov;
+      cameraBase.set(...framing.position);
+      cameraTarget.set(...framing.target);
+      camera.position.copy(cameraBase);
       camera.updateProjectionMatrix();
+
+      // Re-stage when the canvas changes shape: the arrangement is authored in
+      // screen space, so an aspect change moves every slot.
+      if (Math.abs(aspect - stagingAspect) > 0.06) {
+        stagingAspect = aspect;
+        retarget(performance.now() / 1000, !reducedMotion);
+      }
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(host);
@@ -274,20 +295,12 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
       if (!active || !inView || document.hidden) return;
       const elapsed = milliseconds / 1000;
 
-      if (!reducedMotion && elapsed - lastSceneChange > 7.2 && elapsed > 3) {
+      if (!reducedMotion && elapsed - lastSceneChange > 8 && elapsed > 3.5) {
         lastSceneChange = elapsed;
         currentScene = (currentScene + 1) % 4;
         callbacksRef.current.onSceneChange(currentScene);
         scenePulse = 1;
-        const layout = stageLayout(currentScene);
-        models.forEach((model, index) => {
-          poses[index] = {
-            from: { ...motion[index] },
-            to: { ...layout[index] },
-            start: elapsed + index * 0.12,
-            duration: 1.9,
-          };
-        });
+        retarget(elapsed, true);
       }
 
       models.forEach((model, index) => {
@@ -301,26 +314,30 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
         pose.scale = THREE.MathUtils.lerp(move.from.scale, move.to.scale, eased);
         pose.rotation = THREE.MathUtils.lerp(move.from.rotation, move.to.rotation, eased);
 
-        model.position.set(pose.x, pose.y, pose.z);
+        const drift = DRIFT[index];
+        const phase = elapsed * drift.bobSpeed + drift.phase;
+        const bob = reducedMotion ? 0 : Math.sin(phase) * drift.bob;
+        const sway = reducedMotion ? 0 : Math.sin(elapsed * drift.yawSpeed + drift.phase) * drift.yaw;
+        model.position.set(pose.x, pose.y + bob, pose.z);
         model.scale.setScalar(pose.scale);
-        // featured pieces turn slowly; supporting pieces hold their angle
-        const featuredNow = index === currentScene;
-        const turn = reducedMotion ? 0 : featuredNow ? Math.sin(elapsed * 0.22) * 0.22 : 0;
-        const bob = reducedMotion ? 0 : Math.sin(elapsed * 0.55 + index * 1.3) * (featuredNow ? 0.012 : 0.008);
-        model.rotation.set(0, pose.rotation + turn, 0);
-        model.position.y = pose.y + bob;
+        model.rotation.set(0, pose.rotation + sway, 0);
+
+        const shadow = contactShadows[index];
+        const radius = (index === 0 ? 1.45 : 1.1) * pose.scale;
+        shadow.position.set(pose.x, 0.004, pose.z + 0.06);
+        shadow.scale.set(radius, radius, 1);
+        (shadow.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.55 - bob * 6) * (index < 4 ? 1 : 0.6);
       });
 
       // camera: slow orbit, damped pointer parallax, gentle dolly on scene change
       scenePulse = Math.max(0, scenePulse - 0.008);
       pointer.x += (pointer.targetX - pointer.x) * 0.045;
       pointer.y += (pointer.targetY - pointer.y) * 0.045;
-      const orbit = reducedMotion ? 0 : Math.sin(elapsed * 0.11) * 0.16;
-      const dolly = reducedMotion ? 0 : scenePulse * 0.55;
-      const compensation = camera.aspect < 1.15 ? 1 + (1.15 - camera.aspect) * 0.85 : 1;
-      camera.position.x = pointer.x * 0.42 + Math.sin(orbit) * cameraBase.z;
-      camera.position.y = cameraBase.y * compensation - pointer.y * 0.26 + scenePulse * 0.08;
-      camera.position.z = cameraBase.z * compensation + dolly + (1 - Math.cos(orbit)) * cameraBase.z * 0.5;
+      const orbit = reducedMotion ? 0 : Math.sin(elapsed * 0.1) * 0.14;
+      const dolly = reducedMotion ? 0 : scenePulse * 0.5;
+      camera.position.x = pointer.x * 0.34 + Math.sin(orbit) * cameraBase.z;
+      camera.position.y = cameraBase.y - pointer.y * 0.24 + scenePulse * 0.07;
+      camera.position.z = cameraBase.z + dolly + (1 - Math.cos(orbit)) * cameraBase.z * 0.5;
       camera.lookAt(cameraTarget);
 
       renderer.render(scene, camera);
@@ -344,21 +361,16 @@ export default function HeroProductScene({ onReady, onSceneChange }: Props) {
       host.removeEventListener("pointerleave", onPointerLeave);
       visibilityObserver?.disconnect();
       resizeObserver.disconnect();
-      models.forEach((model) => disposeObject(model));
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          materials.forEach((material) => material.dispose());
-        }
+      shared.forEach((model) => disposeObject(model));
+      contactShadows.forEach((mesh) => {
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
       });
-      contactTexture?.dispose();
-      groundTexture?.dispose();
-      hazeTexture?.dispose();
+      shadowTexture?.dispose();
       environment.dispose();
       renderer.dispose();
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="vxl-showcase-canvas" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="vx-hero__canvas" aria-hidden="true" />;
 }

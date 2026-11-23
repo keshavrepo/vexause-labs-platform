@@ -7,102 +7,199 @@ import StorefrontHeader from "@/components/StorefrontHeader";
 import { StoreContactFooter, StoreTagline } from "@/components/StorefrontConfig";
 
 const process = [
-  ["01", "Share the brief", "Send a model or tell us what you are looking to make."],
-  ["02", "Review feasibility", "We assess the request and confirm the scope before quoting."],
-  ["03", "Approve the quote", "Review the price and details before choosing to proceed."],
-  ["04", "Move into production", "Work begins after the required approval and payment."],
+  ["01", "Share the brief", "Send a printable model or describe the part. STL, OBJ and 3MF files are accepted with your request."],
+  ["02", "Review feasibility", "The team checks the geometry, the intended use and the quantity before anything is quoted."],
+  ["03", "Approve the quote", "You see the scope and the price first. Nothing is produced until you accept the quotation."],
+  ["04", "Move into production", "Work begins after approval and payment, then follows the tracked production and shipment steps."],
+];
+
+const principles = [
+  ["Quote first", "Every custom request is reviewed and priced before production. No silent charges, no surprise invoices."],
+  ["Made in the studio", "Parts are printed, finished and checked in-house, with the order status reflecting each step."],
+  ["One visible journey", "Quotation, approval, payment, production and delivery are separate, recorded stages of your order."],
 ];
 
 export default function HomePage() {
-  return <main className="vxl-home min-h-screen">
-    <div className="flex min-h-9 items-center justify-center bg-[#c8f36a] px-4 text-center text-[9px] font-bold tracking-[.17em] text-[#101713] sm:text-[10px]">
-      <span>VEXAUSE LABS</span><span className="mx-2 opacity-50">/</span><StoreTagline/>
-    </div>
-    <StorefrontHeader/>
+  return (
+    <main className="vx-home">
+      <div className="vx-announce">
+        <span className="vx-announce__dot" aria-hidden="true" />
+        <span>Quote-first custom 3D printing</span>
+        <span className="vx-announce__rule" aria-hidden="true" />
+        <StoreTagline className="vx-announce__tagline" />
+        <Link href="/custom-3d-printing">Start a request</Link>
+      </div>
 
-    <section className="vxl-home-hero">
-      <div className="vxl-home-hero__inner">
-        <div className="vxl-hero-copy">
-          <p className="vxl-hero-kicker">Design / prototype / custom 3D printing</p>
-          <h1 className="vxl-hero-title">Custom <em>3D prints.</em><br/>Made tangible.</h1>
-          <p className="vxl-hero-description">From articulated collectibles and miniature models to functional prototypes. Bring a 3D file or a brief; we&apos;ll review the requirements and share a quotation before production.</p>
-          <div className="vxl-hero-actions">
-            <Link href="/custom-3d-printing" className="button-primary">Start a custom request <ArrowUpRight size={16}/></Link>
-            <Link href="/shop" className="button-secondary">Explore the store <ArrowUpRight size={15}/></Link>
+      <StorefrontHeader />
+
+      <section className="vx-hero" aria-labelledby="vx-hero-title">
+        <HeroProductShowcase />
+
+        <div className="vx-hero__inner">
+          <div className="vx-hero__copy">
+            <p className="vx-hero__kicker">Independent 3D printing studio</p>
+            <h1 id="vx-hero-title" className="vx-hero__title">
+              Custom <em>3D prints,</em>
+              <br />
+              made tangible.
+            </h1>
+            <p className="vx-hero__lead">
+              From articulated collectibles and miniature models to functional prototypes. Bring a 3D file or a brief;
+              every request is reviewed and quoted before anything is printed.
+            </p>
+            <div className="vx-hero__actions">
+              <Link href="/custom-3d-printing" className="vx-btn vx-btn--lime">
+                Start a custom request <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+              <Link href="/shop" className="vx-btn vx-btn--ghost">
+                Explore the store <ArrowUpRight size={15} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="vx-hero__proof">
+              <span><CheckCircle2 size={15} aria-hidden="true" /> Quote before production</span>
+              <span><CheckCircle2 size={15} aria-hidden="true" /> Clear approval steps</span>
+              <span><CheckCircle2 size={15} aria-hidden="true" /> Tracked order journey</span>
+            </div>
           </div>
-          <div className="vxl-home-proof">
-            <span><CheckCircle2 size={15}/> Quote before production</span>
-            <span><CheckCircle2 size={15}/> Clear approval steps</span>
+
+          <div className="vx-hero__aside" aria-hidden="true">
+            <span className="vx-hero__aside-line" />
+            <span>Form / material / motion</span>
+            <a href="#collection" className="vx-hero__scroll">
+              Scroll <ArrowDown size={13} />
+            </a>
           </div>
         </div>
-        <HeroProductShowcase/>
-      </div>
-      <a href="#collection" className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 items-center gap-2 text-[9px] font-bold tracking-[.2em] text-[#bac8ba] md:flex">SCROLL TO EXPLORE <ArrowDown size={13}/></a>
-    </section>
+      </section>
 
-    <HomeCatalogSections/>
+      <HomeCatalogSections />
 
-    <section className="vxl-home-section" aria-labelledby="vxl-process-title">
-      <div className="vxl-section-shell">
-        <Reveal>
-          <div className="vxl-section-heading">
-            <div><p className="eyebrow">Simple by design</p><h2 id="vxl-process-title">A clear path from idea to object.</h2></div>
-            <p>Each custom request is reviewed before a quotation is shared. Production moves forward only after the scope is approved.</p>
-          </div>
-          <div id="process" className="vxl-process-grid vxl-grid-stagger">
-            {process.map(([number,title,description])=><Reveal key={number} className="vxl-process-step">
-              <span className="vxl-process-step__number">{number} / PROCESS</span>
-              <h3>{title}</h3>
-              <p>{description}</p>
-            </Reveal>)}
-          </div>
-        </Reveal>
-      </div>
-    </section>
+      <section className="vx-section" aria-labelledby="vx-story-title">
+        <div className="vx-shell">
+          <div className="vx-story">
+            <Reveal>
+              <p className="vx-kicker">The studio</p>
+              <h2 id="vx-story-title" className="vx-story__title">
+                A small studio,
+                <br id="vx-story-detail" />
+                <em>not a marketplace.</em>
+              </h2>
+              <p className="vx-story__lead">
+                VEXAUSE LABS prints its own product line and takes on custom work directly. That means the person who
+                reviews your file is the person responsible for how the part comes out.
+              </p>
+              <Link href="/contact" className="vx-link-arrow">
+                Talk to the studio <ArrowUpRight size={15} aria-hidden="true" />
+              </Link>
+            </Reveal>
 
-    <section className="vxl-home-section vxl-home-section--soft" aria-labelledby="vxl-approach-title">
-      <div className="vxl-section-shell">
-        <Reveal>
-          <div className="vxl-section-heading">
-            <div><p className="eyebrow">The VEXAUSE approach</p><h2 id="vxl-approach-title">Good work starts with a clear brief.</h2></div>
-            <p>3D printing is requirement-led. Feasibility, material options, finish and lead time are confirmed against the part itself.</p>
+            <div className="vx-story__list">
+              {principles.map(([title, copy], index) => (
+                <Reveal key={title} className="vx-story__item" delay={index * 80}>
+                  <span className="vx-story__num">0{index + 1}</span>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{copy}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            <div className="border-t border-[#b9c8b9] pt-5"><ShieldCheck size={21} className="text-[#47745b]"/><h3 className="mt-5 text-lg font-semibold tracking-tight">Clarity before commitment</h3><p className="mt-2 text-sm leading-7 text-[#68766d]">Review the quotation and scope before deciding whether to proceed.</p></div>
-            <div className="border-t border-[#b9c8b9] pt-5"><FileUp size={21} className="text-[#47745b]"/><h3 className="mt-5 text-lg font-semibold tracking-tight">Designed around the brief</h3><p className="mt-2 text-sm leading-7 text-[#68766d]">Share a 3D file, reference or an idea for the team to assess.</p></div>
-            <div className="border-t border-[#b9c8b9] pt-5"><PackageCheck size={21} className="text-[#47745b]"/><h3 className="mt-5 text-lg font-semibold tracking-tight">A visible order journey</h3><p className="mt-2 text-sm leading-7 text-[#68766d]">Quotation, approval, payment and fulfilment have distinct steps.</p></div>
-          </div>
-        </Reveal>
-      </div>
-    </section>
+        </div>
+      </section>
 
-    <section className="vxl-home-section">
-      <div className="vxl-section-shell">
-        <Reveal className="vxl-service-panel">
-          <div className="relative z-10">
-            <p className="eyebrow !text-[#c8f36a]">Custom 3D printing</p>
-            <h2>Bring us the file.<br/>Or just the idea.</h2>
-            <p className="mt-5">Tell us about the part, its intended use and any references. The team will review the request and share a quotation before work begins.</p>
-            <Link href="/custom-3d-printing" className="button-primary mt-5 !bg-[#c8f36a] !text-[#101713]">Tell us what you need <ArrowUpRight size={16}/></Link>
-          </div>
-          <div className="vxl-service-points">
-            <p className="vxl-service-point"><CheckCircle2 size={17}/> Upload an STL, OBJ or 3MF model, or send reference material.</p>
-            <p className="vxl-service-point"><CheckCircle2 size={17}/> Share dimensions, quantity and intended use.</p>
-            <p className="vxl-service-point"><CheckCircle2 size={17}/> Review the proposed scope and quotation before approval.</p>
-          </div>
-        </Reveal>
-      </div>
-    </section>
+      <section className="vx-section vx-section--soft" aria-labelledby="vx-process-title">
+        <div className="vx-shell">
+          <Reveal className="vx-head">
+            <div>
+              <p className="vx-kicker">How it works</p>
+              <h2 id="vx-process-title">A clear path from idea to object.</h2>
+            </div>
+            <p>
+              Custom work is requirement-led: feasibility, material, finish and timing are confirmed against the part
+              itself before a quotation is shared.
+            </p>
+          </Reveal>
 
-    <section className="vxl-home-section pt-0">
-      <div className="vxl-section-shell">
-        <Reveal className="vxl-final-cta">
-          <div><p className="eyebrow">Ready when you are</p><h2>Make the next step a real one.</h2></div>
-          <Link href="/custom-3d-printing" className="button-primary shrink-0">Start a request <ArrowUpRight size={16}/></Link>
-        </Reveal>
-      </div>
-    </section>
+          <div className="vx-process">
+            {process.map(([number, title, description], index) => (
+              <Reveal key={number} className="vx-process__step" delay={index * 70}>
+                <span className="vx-process__index">{number}</span>
+                <span className="vx-process__mark" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-    <StoreContactFooter/>
-  </main>;
+      <section className="vx-band" aria-labelledby="vx-service-title">
+        <div className="vx-band__inner">
+          <Reveal>
+            <p className="vx-kicker vx-kicker--lime">Custom 3D printing</p>
+            <h2 id="vx-service-title">
+              Bring us the file.
+              <br />
+              <em>Or just the idea.</em>
+            </h2>
+            <p className="vx-band__lead">
+              Tell us about the part, its intended use and any references. The team reviews the request and shares a
+              quotation before work begins.
+            </p>
+            <Link href="/custom-3d-printing" className="vx-btn vx-btn--lime">
+              Tell us what you need <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </Reveal>
+
+          <ul className="vx-band__points">
+            {[
+              ["Upload a model or brief", "STL, OBJ and 3MF files, plus reference images, up to the limits the request form enforces."],
+              ["Share the constraints", "Dimensions, quantity, intended use and any deadline you are working to."],
+              ["Review before approval", "You see the proposed scope and quotation, and decide whether to proceed."],
+            ].map(([title, copy]) => (
+              <li key={title} className="vx-band__point">
+                <CheckCircle2 size={17} aria-hidden="true" />
+                <span>
+                  <b>{title}</b>
+                  {copy}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="vx-cta" aria-labelledby="vx-cta-title">
+        <div className="vx-cta__inner">
+          <div>
+            <p className="vx-kicker vx-kicker--ink">VEXAUSE LABS</p>
+            <h2 id="vx-cta-title">
+              Building
+              <br />
+              what&apos;s next.
+            </h2>
+          </div>
+          <div className="vx-cta__actions">
+            <p>Quote-first custom printing, a documented studio collection and tracked orders — start with whichever fits.</p>
+            <div className="vx-actions">
+              <Link href="/custom-3d-printing" className="vx-btn vx-btn--dark">
+                Start a request <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+              <Link href="/shop" className="vx-btn vx-btn--outline-dark">
+                Browse the store
+              </Link>
+            </div>
+            <div className="vx-cta__notes">
+              <span><FileUp size={14} aria-hidden="true" /> Files reviewed before quoting</span>
+              <span><ShieldCheck size={14} aria-hidden="true" /> Private uploads</span>
+              <span><PackageCheck size={14} aria-hidden="true" /> Tracked production</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <StoreContactFooter />
+    </main>
+  );
 }
