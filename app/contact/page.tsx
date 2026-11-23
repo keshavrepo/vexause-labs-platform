@@ -1,4 +1,55 @@
 import Link from "next/link";
 import StorefrontHeader from "@/components/StorefrontHeader";
-import {StoreContactDetails,StoreContactFooter} from "@/components/StorefrontConfig";
-export default function ContactPage(){return <><StorefrontHeader/><main className="min-h-[65vh] bg-[#F5F7F3] px-4 py-10 sm:px-6"><div className="mx-auto max-w-4xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#789681]">VEXAUSE LABS</p><h1 className="mt-3 text-3xl font-bold text-[#173D32] sm:text-4xl">Contact us</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">For product, custom 3D printing and order enquiries, use the contact details configured by the store team. If you already have an account, submitting a support request keeps the conversation linked to your order.</p><StoreContactDetails/><div className="mt-8 border border-[#DCE4DC] bg-white p-5"><h2 className="font-bold text-[#173D32]">Need help with an existing order?</h2><p className="mt-2 text-sm text-[#718078]">Sign in to submit a support request and follow its status.</p><Link href="/account/support" className="mt-4 inline-flex min-h-11 items-center bg-[#173D32] px-5 text-xs font-bold text-white">Go to help & support</Link></div><p className="mt-5 text-xs text-[#718078]">For common questions, visit <Link href="/help" className="font-bold underline">Help & FAQs</Link>.</p></div></main><StoreContactFooter/></>}
+import { StoreContactDetails, StoreContactFooter } from "@/components/StorefrontConfig";
+import { PageHeader, Panel } from "@/components/ui/Primitives";
+
+export default function ContactPage() {
+  return (
+    <>
+      <StorefrontHeader />
+      <main className="min-h-[65vh] bg-[#F5F7F3]">
+        <div className="vx-page vx-page--mid">
+          <PageHeader
+            kicker="VEXAUSE LABS · Contact"
+            title="Talk to the studio"
+            description="For product, custom 3D printing and order enquiries, use the business contact details configured by the store team. Signed-in customers can raise a tracked support request instead."
+            actions={
+              <>
+                <Link href="/account/support" className="vx-btn vx-btn--primary vx-btn--sm">Tracked support request</Link>
+                <Link href="/help" className="vx-btn vx-btn--sm">Help &amp; FAQs</Link>
+              </>
+            }
+          />
+
+          <StoreContactDetails />
+
+          <div className="vx-grid vx-grid--2" style={{ marginTop: 20 }}>
+            <Panel title="Order or delivery issue" meta="Signed-in support keeps the conversation linked to the order.">
+              <div className="vx-panel__body">
+                <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+                  Submit a request from your account and follow its status. Cancellation, return and refund requests are
+                  reviewed by the team — they are not automatic.
+                </p>
+                <Link href="/account/support" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Go to help &amp; support</Link>
+              </div>
+            </Panel>
+            <Panel title="Custom 3D printing" meta="Quote-first workflow, no obligation.">
+              <div className="vx-panel__body">
+                <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+                  Send a printable model or a brief. We review feasibility and share a quotation before any production
+                  begins.
+                </p>
+                <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Request a custom print</Link>
+              </div>
+            </Panel>
+          </div>
+
+          <p className="vx-small vx-muted" style={{ marginTop: 18 }}>
+            Looking for common answers? Visit <Link href="/help" style={{ fontWeight: 700, textDecoration: "underline" }}>Help &amp; FAQs</Link>.
+          </p>
+        </div>
+      </main>
+      <StoreContactFooter />
+    </>
+  );
+}

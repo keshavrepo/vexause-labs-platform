@@ -8,7 +8,7 @@ export default function AnalyticsPage(){
  useEffect(()=>{fetch("/api/admin/analytics",{cache:"no-store"}).then(async r=>{if(!r.ok)throw new Error("Admin sign-in required or analytics unavailable.");return r.json()}).then(setData).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[]);
  const max=Math.max(1,...(data?.monthlyRevenue.map(x=>x.revenuePaise)||[]));
  return <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10">
-  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-800">VEXAUSE LABS / INSIGHTS</p><h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Business analytics</h1><p className="mt-2 text-sm text-neutral-600">Verified revenue and operational activity from your PostgreSQL records.</p></div><Link href="/admin" className="text-sm font-semibold underline">Back to admin</Link></div>
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-800">VEXAUSE LABS / INSIGHTS</p><h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Business analytics</h1><p className="mt-2 text-sm text-neutral-600">Verified revenue and operational activity from your PostgreSQL records.</p></div></div>
   {loading&&<p className="mt-8 text-sm text-neutral-500">Loading business metrics…</p>}
   {error&&<p role="alert" className="mt-8 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p>}
   {data&&<>

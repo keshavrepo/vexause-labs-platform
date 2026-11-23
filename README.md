@@ -18,7 +18,7 @@ VEXAUSE LABS currently offers **3D printing only**. CNC, electronics, IoT and ot
 
 ## Stack
 
-- Next.js 14, React, TypeScript and Tailwind CSS
+- Next.js 15, React 18, TypeScript and Tailwind CSS
 - PostgreSQL and Prisma 5
 - Customer/admin authentication, API routes and background worker
 - Razorpay integration code (requires merchant credentials and live testing)
@@ -28,6 +28,8 @@ VEXAUSE LABS currently offers **3D printing only**. CNC, electronics, IoT and ot
 ## Implemented platform areas
 
 The cumulative project contains storefront/catalogue, product imagery upload, cart and wishlist, customer accounts and addresses, checkout/order workflows, inventory operations, manual shipment tracking, customer support requests, Razorpay integration code, coupons, moderated product reviews, search/discovery, security controls, database health/backup scripts, background jobs, custom 3D-print quote workflow, analytics UI, responsive layouts, deployment scripts, custom quote acceptance and a customer notification centre, secure password-reset and email-verification token flows, SMTP-backed email worker code, and Google OAuth customer sign-in implementation.
+
+A shared visual layer (`app/design-system.css`, imported after `app/globals.css`) and shared shells (`components/AdminShell.tsx`, `components/AccountShell.tsx`, `components/AuthShell.tsx`, `components/ui/Primitives.tsx`) drive the storefront, account and admin interfaces. See `docs/PHASE-55-UI-DESIGN-SYSTEM-REFRESH.md` for the design-system reference and `TEST-REPORT.md` for the current verification status.
 
 See `docs/PHASE-*.md` for scope and limitations of each phase. Run `npm test` for the dependency-free source-contract checks. Before deployment, generate and review the initial Prisma migration using `npm run db:baseline:generate`; the deployment guard intentionally blocks until this migration exists.
 

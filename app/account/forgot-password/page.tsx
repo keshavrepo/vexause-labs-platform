@@ -1,8 +1,57 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
-export default function ForgotPasswordPage(){
- const [email,setEmail]=useState("");const [message,setMessage]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);
- async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");setMessage("");try{const r=await fetch("/api/customer/forgot-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Request failed");setMessage(d.message);}catch(e){setError(e instanceof Error?e.message:"Unable to submit request.");}finally{setBusy(false);}}
- return <main className="min-h-screen bg-[#F1F3EF] px-5 py-12"><form onSubmit={submit} className="mx-auto max-w-md border bg-white p-7"><Link href="/account/login" className="text-xs font-bold text-[#315D49]">← Sign in</Link><h1 className="mt-6 text-2xl font-bold text-[#173D32]">Reset password</h1><p className="mt-2 text-sm text-[#68776E]">Enter the email address associated with your account.</p>{error&&<p role="alert" className="mt-4 bg-red-50 p-3 text-sm text-red-800">{error}</p>}{message&&<p role="status" className="mt-4 bg-[#EDF4EE] p-3 text-sm text-[#173D32]">{message}</p>}<label className="mt-6 block text-xs font-bold">Email<input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="mt-2 h-11 w-full border px-3 text-sm"/></label><button disabled={busy} className="mt-5 h-12 w-full bg-[#173D32] text-xs font-bold text-white">{busy?"Sending…":"Send reset link"}</button></form></main>;
+import AuthShell from "@/components/AuthShell";
+import { Alert } from "@/components/ui/Primitives";
+
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const r = await fetch("/api/customer/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Request failed");
+      setMessage(d.message);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to submit request.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <AuthShell
+      eyebrow="Customer account"
+      title="Reset your password"
+      description="Enter the email address linked to your account. If it exists, a single-use reset link is emailed to it."
+    >
+      <form onSubmit={submit} className="vx-form">
+        <label className="vx-field">
+          <span className="vx-label">Email address</span>
+          <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="vx-input" />
+        </label>
+        {error ? <Alert tone="danger">{error}</Alert> : null}
+        {message ? <Alert tone="ok">{message}</Alert> : null}
+        <button disabled={busy} className="vx-btn vx-btn--primary vx-btn--block">
+          {busy ? "Sending…" : "Send reset link"}
+        </button>
+        <p className="vx-small vx-muted" style={{ textAlign: "center", margin: 0 }}>
+          Remembered it? <Link href="/account/login" style={{ fontWeight: 700, textDecoration: "underline" }}>Sign in</Link>
+        </p>
+      </form>
+    </AuthShell>
+  );
 }

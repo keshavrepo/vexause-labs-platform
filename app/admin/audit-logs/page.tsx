@@ -12,7 +12,7 @@ export default function AuditLogsPage(){
  useEffect(()=>{let live=true;setLoading(true);setError("");fetch(`/api/admin/audit-logs?${query}`,{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||"Could not load audit history");if(live){setLogs(d.logs||[]);setActors(d.actors||[]);setTotal(d.total||0);setTotalPages(d.totalPages||1)}}).catch(e=>{if(live)setError(e.message)}).finally(()=>{if(live)setLoading(false)});return()=>{live=false}},[query]);
  function clear(){setFrom("");setTo("");setActorId("");setAction("");setEntityType("");setEntityId("");setPage(1)}
  return <main className="min-h-screen bg-[#F3F5F1] p-4 text-[#0B0F0E] sm:p-7"><div className="mx-auto max-w-7xl">
- <Link href="/admin" className="text-xs font-bold text-[#668071]">← Admin dashboard</Link>
+ 
  <p className="mt-5 text-[10px] font-bold tracking-[.2em] text-[#668071]">VEXAUSE LABS / SECURITY</p><div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-bold text-[#173D32]">Audit history</h1><p className="mt-2 text-sm text-[#718078]">Trace recorded administrative and operational changes. Access is restricted to administrators.</p></div><span className="border border-[#D6DED7] bg-white px-3 py-2 text-xs font-semibold">{total.toLocaleString()} records</span></div>
  <form onSubmit={e=>e.preventDefault()} className="mt-6 grid gap-3 rounded-lg border border-[#E0E6E0] bg-white p-4 sm:grid-cols-2 lg:grid-cols-3">
  <label className="text-xs font-semibold text-[#52675A]">From<input type="date" value={from} onChange={e=>{setFrom(e.target.value);setPage(1)}} className="mt-1 h-10 w-full border border-[#DCE3DC] px-3 text-sm"/></label>

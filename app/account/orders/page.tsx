@@ -1,9 +1,127 @@
 "use client";
-import {useEffect,useState} from "react";import Link from "next/link";
-import CustomerNav from "@/components/CustomerNav";
-type Order={id:string;orderCode:string;status:string;totalPaise:number;createdAt:string;items:{id:string;productName:string;quantity:number;lineTotalPaise:number}[]};
-const money=(p:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR"}).format(p/100);
-export default function OrdersPage(){const[orders,setOrders]=useState<Order[]>([]);const[error,setError]=useState("");const[loading,setLoading]=useState(true);
-useEffect(()=>{fetch("/api/customer/orders").then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||"Sign in required");setOrders(d.orders||[])}).catch(e=>setError(e.message)).finally(()=>setLoading(false));},[]);
-return <main className="min-h-screen bg-[#F5F7F3] p-5"><div className="mx-auto max-w-4xl"><Link href="/account" className="text-xs font-bold text-[#668071]">← My account</Link><h1 className="mt-5 text-3xl font-bold text-[#173D32]">My orders</h1><CustomerNav />
-{loading?<p className="mt-8">Loading orders…</p>:error?<div className="mt-6 bg-white p-6 text-sm">{error}<p className="mt-3"><Link href="/account/login" className="font-bold text-[#173D32]">Sign in</Link></p></div>:orders.length===0?<div className="mt-6 border bg-white p-8 text-center"><p className="font-bold text-[#173D32]">No orders yet</p><Link href="/shop" className="mt-4 inline-block bg-[#173D32] px-5 py-3 text-xs font-bold text-white">Explore the store</Link></div>:<div className="mt-6 space-y-4">{orders.map(o=><article key={o.id} className="border border-[#E0E7E0] bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold text-[#173D32]">{o.orderCode}</p><p className="mt-1 text-xs text-[#718078]">{new Date(o.createdAt).toLocaleString("en-IN")}</p></div><span className="h-fit bg-[#EDF2ED] px-3 py-1 text-[10px] font-bold">{o.status.replaceAll("_"," ")}</span></div><div className="mt-4 space-y-1 text-xs text-[#66766D]">{o.items.map(i=><p key={i.id}>{i.productName} × {i.quantity}<b className="float-right text-[#173D32]">{money(i.lineTotalPaise)}</b></p>)}</div><div className="mt-4 flex justify-between border-t pt-3 text-sm"><b>Total</b><b className="text-[#173D32]">{money(o.totalPaise)}</b></div><Link href={`/account/orders/${o.id}`} className="mt-4 inline-block text-xs font-bold text-[#426B52] underline">View order details</Link></article>)}</div>}</div></main>}
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowUpRight, Package } from "lucide-react";
+import { EmptyState, PageHeader, Panel, StatusBadge } from "@/components/ui/Primitives";
+
+type OrderItem = { id: string; productName: string; quantity: number; lineTotalPaise: number };
+type Order = { id: string; orderCode: string; status: string; totalPaise: number; createdAt: string; kind?: string; items: OrderItem[] };
+
+const money = (p: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p / 100);
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/customer/orders", { cache: "no-store" })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || "Please sign in to view orders.");
+        return d;
+      })
+      .then((d) => {
+        if (active) setOrders(d.orders || []);
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <div className="vx-page">
+      <PageHeader
+        kicker="Orders"
+        title="Order history"
+        description="Every store and custom order placed with your account. Open an order for tracking, payment state and its tax invoice."
+        actions={<Link href="/shop" className="vx-btn vx-btn--sm">Continue shopping</Link>}
+      />
+
+      {error ? (
+        <Panel title="Orders unavailable">
+          <div className="vx-panel__body">
+            <EmptyState
+              title={error}
+              text="Sign in with the account used at checkout to see its order history."
+              action={<Link href="/account/login" className="vx-btn vx-btn--primary vx-btn--sm">Sign in</Link>}
+            />
+          </div>
+        </Panel>
+      ) : loading ? (
+        <div className="vx-stack" aria-busy="true">
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="vx-skeleton" style={{ height: 116 }} />
+          ))}
+          <p className="sr-only" role="status">Loading orders…</p>
+        </div>
+      ) : orders.length === 0 ? (
+        <Panel>
+          <div className="vx-panel__body">
+            <EmptyState
+              title="No orders yet"
+              text="Orders appear here as soon as checkout completes. Custom 3D requests are tracked separately."
+              action={
+                <div className="vx-actions" style={{ justifyContent: "center" }}>
+                  <Link href="/shop" className="vx-btn vx-btn--primary vx-btn--sm">Browse products</Link>
+                  <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm">Custom print</Link>
+                </div>
+              }
+            />
+          </div>
+        </Panel>
+      ) : (
+        <div className="vx-stack">
+          {orders.map((order) => (
+            <Panel key={order.id} flush>
+              <div className="vx-row vx-row--between" style={{ padding: "16px 20px", gap: 14, alignItems: "flex-start" }}>
+                <div className="vx-row" style={{ gap: 14, alignItems: "flex-start" }}>
+                  <span className="vx-order-icon" aria-hidden="true">
+                    <Package size={17} />
+                  </span>
+                  <div>
+                    <p style={{ margin: 0, color: "var(--vxl-forest)", fontSize: 14, fontWeight: 700 }}>
+                      {order.orderCode}
+                      <span className="vx-small vx-muted" style={{ marginLeft: 8, fontWeight: 500 }}>
+                        {order.kind === "CUSTOM" ? "Custom order" : "Store order"}
+                      </span>
+                    </p>
+                    <p className="vx-small vx-muted" style={{ margin: "4px 0 0" }}>
+                      Placed {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} ·{" "}
+                      {order.items.reduce((n, item) => n + item.quantity, 0)} item(s)
+                    </p>
+                    <ul className="vx-small" style={{ margin: "8px 0 0", padding: 0, listStyle: "none", color: "var(--vx-ink-soft)" }}>
+                      {order.items.slice(0, 3).map((item) => (
+                        <li key={item.id}>
+                          {item.productName} × {item.quantity}
+                        </li>
+                      ))}
+                      {order.items.length > 3 ? <li className="vx-muted">+{order.items.length - 3} more</li> : null}
+                    </ul>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", display: "grid", gap: 8, justifyItems: "end" }}>
+                  <StatusBadge status={order.status} />
+                  <p className="vx-tabular" style={{ margin: 0, color: "var(--vxl-forest)", fontSize: 15, fontWeight: 700 }}>
+                    {money(order.totalPaise)}
+                  </p>
+                  <Link href={`/account/orders/${order.id}`} className="vx-btn vx-btn--sm">
+                    Order details <ArrowUpRight size={13} aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            </Panel>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

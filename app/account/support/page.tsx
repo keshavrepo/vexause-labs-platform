@@ -1,17 +1,242 @@
 "use client";
-import {useEffect,useState} from "react";import Link from "next/link";
-import CustomerNav from "@/components/CustomerNav";
-type Request={id:string;requestCode:string;type:string;status:string;subject:string;message:string;adminReply:string|null;createdAt:string;order:{orderCode:string;status:string}|null;events:{actorRole:string;fromStatus:string|null;toStatus:string|null;message:string|null;createdAt:string}[]};
-type Order={id:string;orderCode:string;status:string};
-export default function SupportPage(){
- const[requests,setRequests]=useState<Request[]>([]);const[orders,setOrders]=useState<Order[]>([]);const[type,setType]=useState("GENERAL");const[orderId,setOrderId]=useState("");const[subject,setSubject]=useState("");const[message,setMessage]=useState("");const[error,setError]=useState("");const[busy,setBusy]=useState(false);
- async function load(){const [a,b]=await Promise.all([fetch("/api/customer/support"),fetch("/api/customer/orders")]);if(a.ok){const d=await a.json();setRequests(d.requests||[])}if(b.ok){const d=await b.json();setOrders(d.orders||[])}}
- useEffect(()=>{load().catch(()=>setError("Could not load support requests."))},[]);
- async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");try{const r=await fetch("/api/customer/support",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type,orderId:orderId||undefined,subject,message})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Submission failed");setSubject("");setMessage("");setOrderId("");await load()}catch(e:any){setError(e.message)}finally{setBusy(false)}}
- const eligible=orders.filter(o=>type==="CANCELLATION"?["PENDING_REVIEW","AWAITING_PAYMENT"].includes(o.status):["RETURN","REFUND"].includes(type)?o.status==="DELIVERED":true);
- return <main className="min-h-screen bg-[#F5F7F3] p-5"><div className="mx-auto max-w-4xl"><Link href="/account" className="text-xs font-bold text-[#668071]">← My account</Link><h1 className="mt-5 text-3xl font-bold text-[#173D32]">Help & support</h1><CustomerNav /><p className="mt-2 text-sm text-[#718078]">Submit a request and follow its review history. Refunds and returns are reviewed by the team; they are not automatic.</p>{error&&<p className="mt-4 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
- <form onSubmit={submit} className="mt-6 space-y-4 border border-[#E0E7E0] bg-white p-5"><h2 className="font-bold text-[#173D32]">Create a support request</h2><label className="block text-xs font-bold">Request type<select value={type} onChange={e=>{setType(e.target.value);setOrderId("")}} className="mt-1 h-11 w-full border px-3 text-sm"><option value="GENERAL">General support</option><option value="CANCELLATION">Cancel an order</option><option value="RETURN">Return an order</option><option value="REFUND">Refund enquiry</option></select></label>
- {type!=="GENERAL"&&<label className="block text-xs font-bold">Order<select required value={orderId} onChange={e=>setOrderId(e.target.value)} className="mt-1 h-11 w-full border px-3 text-sm"><option value="">Choose eligible order</option>{eligible.map(o=><option key={o.id} value={o.id}>{o.orderCode} · {o.status}</option>)}</select><span className="mt-1 block font-normal text-[#718078]">Cancellation requests are available before production. Return/refund enquiries are available after delivery. Submitting a request does not automatically approve a return or issue a refund.</span></label>}
- <label className="block text-xs font-bold">Subject<input required minLength={4} maxLength={120} value={subject} onChange={e=>setSubject(e.target.value)} className="mt-1 h-11 w-full border px-3 text-sm"/></label><label className="block text-xs font-bold">Explain the issue<textarea required minLength={10} maxLength={2000} value={message} onChange={e=>setMessage(e.target.value)} rows={4} className="mt-1 w-full border p-3 text-sm"/></label><button disabled={busy} className="bg-[#173D32] px-5 py-3 text-xs font-bold text-white disabled:opacity-50">{busy?"Submitting…":"Submit request"}</button></form>
- <h2 className="mt-9 text-xl font-bold text-[#173D32]">Your requests</h2><div className="mt-4 space-y-3">{requests.length===0?<p className="border bg-white p-5 text-sm text-[#718078]">No support requests yet.</p>:requests.map(r=><article key={r.id} className="border border-[#E0E7E0] bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><b className="text-sm text-[#173D32]">{r.requestCode} · {r.type.replaceAll("_"," ")}</b><span className="text-xs font-bold text-[#42634F]">{r.status.replaceAll("_"," ")}</span></div><p className="mt-2 font-semibold">{r.subject}</p><p className="mt-1 whitespace-pre-wrap text-sm text-[#68776E]">{r.message}</p>{r.order&&<p className="mt-2 text-xs text-[#718078]">Order: {r.order.orderCode} · {r.order.status}</p>}{r.adminReply&&<div className="mt-3 bg-[#F3F6F2] p-3 text-sm"><b>Team response</b><p className="mt-1">{r.adminReply}</p></div>}<div className="mt-4 border-t pt-3"><p className="text-[10px] font-bold uppercase tracking-wider text-[#718078]">Activity history</p>{r.events.map((ev,i)=><p key={i} className="mt-2 text-xs text-[#68776E]">{new Date(ev.createdAt).toLocaleString("en-IN")} · {ev.actorRole} · {ev.toStatus||"Update"}{ev.message?` — ${ev.message}`:""}</p>)}</div></article>)}</div></div></main>
+
+import { useEffect, useState } from "react";
+import { MessageSquare } from "lucide-react";
+import { Alert, EmptyState, PageHeader, Panel, StatusBadge } from "@/components/ui/Primitives";
+
+type Request = {
+  id: string;
+  requestCode: string;
+  type: string;
+  status: string;
+  subject: string;
+  message: string;
+  adminReply: string | null;
+  createdAt: string;
+  order: { orderCode: string; status: string } | null;
+  events: { actorRole: string; fromStatus: string | null; toStatus: string | null; message: string | null; createdAt: string }[];
+};
+type Order = { id: string; orderCode: string; status: string };
+
+export default function SupportPage() {
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [type, setType] = useState("GENERAL");
+  const [orderId, setOrderId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    const [a, b] = await Promise.all([fetch("/api/customer/support", { cache: "no-store" }), fetch("/api/customer/orders", { cache: "no-store" })]);
+    if (a.ok) {
+      const d = await a.json();
+      setRequests(d.requests || []);
+    }
+    if (b.ok) {
+      const d = await b.json();
+      setOrders(d.orders || []);
+    }
+  }
+
+  useEffect(() => {
+    load().catch(() => setError("Could not load support requests."));
+  }, []);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const r = await fetch("/api/customer/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, orderId: orderId || undefined, subject, message }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Submission failed");
+      setSubject("");
+      setMessage("");
+      setOrderId("");
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const eligible = orders.filter((o) =>
+    type === "CANCELLATION"
+      ? ["PENDING_REVIEW", "AWAITING_PAYMENT"].includes(o.status)
+      : ["RETURN", "REFUND"].includes(type)
+        ? o.status === "DELIVERED"
+        : true,
+  );
+
+  return (
+    <div className="vx-page">
+      <PageHeader
+        kicker="Account"
+        title="Help &amp; support"
+        description="Submit a request and follow its review history. Cancellations, returns and refunds are reviewed by the team — they are never automatic."
+      />
+
+      {error ? <Alert tone="danger">{error}</Alert> : null}
+
+      <div className="vx-split" style={{ marginTop: 20 }}>
+        <div className="vx-stack">
+          <Panel title="Create a support request" meta="Requests are linked to your account and, when relevant, to an order.">
+            <form onSubmit={submit} className="vx-panel__body vx-form">
+              <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
+                <label className="vx-field">
+                  <span className="vx-label">Request type</span>
+                  <select
+                    value={type}
+                    onChange={(e) => {
+                      setType(e.target.value);
+                      setOrderId("");
+                    }}
+                    className="vx-select"
+                  >
+                    <option value="GENERAL">General support</option>
+                    <option value="CANCELLATION">Cancel an order</option>
+                    <option value="RETURN">Return an order</option>
+                    <option value="REFUND">Refund enquiry</option>
+                  </select>
+                </label>
+                {type !== "GENERAL" ? (
+                  <label className="vx-field">
+                    <span className="vx-label">Order *</span>
+                    <select required value={orderId} onChange={(e) => setOrderId(e.target.value)} className="vx-select">
+                      <option value="">Choose eligible order</option>
+                      {eligible.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.orderCode} · {o.status.replaceAll("_", " ")}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="vx-hint">
+                      Cancellations are available before production; return and refund enquiries after delivery.
+                    </span>
+                  </label>
+                ) : null}
+                <label className="vx-field" style={{ gridColumn: "1 / -1" }}>
+                  <span className="vx-label">Subject *</span>
+                  <input required minLength={4} maxLength={120} value={subject} onChange={(e) => setSubject(e.target.value)} className="vx-input" />
+                </label>
+                <label className="vx-field" style={{ gridColumn: "1 / -1" }}>
+                  <span className="vx-label">Explain the issue *</span>
+                  <textarea required minLength={10} maxLength={2000} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} className="vx-textarea" />
+                  <span className="vx-hint">{message.length}/2000 characters</span>
+                </label>
+              </div>
+              <div className="vx-row vx-row--between" style={{ gap: 12 }}>
+                <p className="vx-small vx-muted" style={{ margin: 0, maxWidth: "44ch" }}>
+                  Submitting a request does not approve a cancellation, return or refund. You will receive a reply in
+                  this account.
+                </p>
+                <button disabled={busy} className="vx-btn vx-btn--primary">
+                  {busy ? "Submitting…" : "Submit request"}
+                </button>
+              </div>
+            </form>
+          </Panel>
+
+          <div>
+            <h2 className="vx-section-title">Your requests</h2>
+            {requests.length === 0 ? (
+              <EmptyState title="No support requests yet" text="When you raise a request it will appear here with its full review history." />
+            ) : (
+              <div className="vx-stack" style={{ gap: 12 }}>
+                {requests.map((request) => (
+                  <Panel key={request.id} flush>
+                    <div style={{ padding: "16px 20px" }}>
+                      <div className="vx-row vx-row--between" style={{ gap: 10 }}>
+                        <p style={{ margin: 0, color: "var(--vxl-forest)", fontSize: 12.5, fontWeight: 700 }}>
+                          {request.requestCode}
+                          <span className="vx-muted" style={{ fontWeight: 500 }}> · {request.type.replaceAll("_", " ")}</span>
+                        </p>
+                        <div className="vx-row" style={{ gap: 8 }}>
+                          <StatusBadge status={request.status} />
+                        </div>
+                      </div>
+                      <p style={{ margin: "10px 0 0", color: "var(--vxl-forest)", fontSize: 13, fontWeight: 650 }}>{request.subject}</p>
+                      <p style={{ margin: "4px 0 0", color: "var(--vx-ink-soft)", fontSize: 12.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                        {request.message}
+                      </p>
+                      {request.order ? (
+                        <p className="vx-small vx-muted" style={{ margin: "8px 0 0" }}>
+                          Order {request.order.orderCode} · {request.order.status.replaceAll("_", " ")}
+                        </p>
+                      ) : null}
+                      {request.adminReply ? (
+                        <div className="vx-alert vx-alert--ok" style={{ marginTop: 12, display: "grid", gap: 3 }}>
+                          <strong style={{ fontSize: 11.5 }}>Team response</strong>
+                          <span style={{ color: "var(--vx-ink-soft)", whiteSpace: "pre-wrap" }}>{request.adminReply}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                    {request.events?.length ? (
+                      <div className="vx-panel__foot">
+                        <p className="vx-label" style={{ marginBottom: 8 }}>Activity</p>
+                        <ol className="vx-timeline">
+                          {request.events.map((event, index) => (
+                            <li className="vx-timeline__item" key={index} style={{ paddingBottom: 12 }}>
+                              <span className="vx-timeline__dot" aria-hidden="true" />
+                              <div>
+                                <p className="vx-timeline__title">{event.toStatus ? event.toStatus.replaceAll("_", " ") : "Update"} · {event.actorRole}</p>
+                                <p className="vx-timeline__meta">
+                                  {new Date(event.createdAt).toLocaleString("en-IN")}
+                                  {event.message ? ` — ${event.message}` : ""}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    ) : null}
+                  </Panel>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className="vx-order-aside">
+          <Panel tone="quiet" title="How support works" meta="Typical review path for a request.">
+            <div className="vx-panel__body">
+              <ol className="vx-timeline">
+                {[
+                  ["Submitted", "Your request is recorded with a reference code."],
+                  ["Review", "The team checks order state, eligibility and payment records."],
+                  ["Reply", "A written response is added to the request in this account."],
+                  ["Action", "Approved refunds and cancellations are processed separately."],
+                ].map(([title, text], index) => (
+                  <li className="vx-timeline__item" key={title}>
+                    <span className="vx-timeline__dot" aria-hidden="true" />
+                    <div>
+                      <p className="vx-timeline__title">{String(index + 1).padStart(2, "0")} · {title}</p>
+                      <p className="vx-timeline__meta">{text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </Panel>
+          <Panel title="Prefer email?" meta="Contact details come from store settings.">
+            <div className="vx-panel__body">
+              <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+                Business contact details are published on the contact page. Requests made here stay linked to your order.
+              </p>
+              <a href="/contact" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
+                <MessageSquare size={13} aria-hidden="true" /> Contact details
+              </a>
+            </div>
+          </Panel>
+        </aside>
+      </div>
+    </div>
+  );
 }

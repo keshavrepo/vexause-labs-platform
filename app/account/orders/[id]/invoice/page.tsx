@@ -1,7 +1,143 @@
 "use client";
-import {useEffect,useState} from "react";import Link from "next/link";import {useParams} from "next/navigation";
-type Invoice={invoiceNumber:string;issuedAt:string;sellerName:string;sellerGstin:string|null;sellerStateCode:string;buyerName:string;placeOfSupply:string;subtotalPaise:number;discountPaise:number;taxablePaise:number;cgstPaise:number;sgstPaise:number;igstPaise:number;totalTaxPaise:number;grandTotalPaise:number;linesJson:any[];order:{orderCode:string}};
-const money=(p:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR"}).format(p/100);
-export default function InvoicePage(){const params=useParams<{id:string}>();const [invoice,setInvoice]=useState<Invoice|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true);
-useEffect(()=>{fetch(`/api/customer/orders/${params.id}/invoice`).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Invoice unavailable");setInvoice(d.invoice)}).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[params.id]);
-return <main className="min-h-screen bg-[#F5F7F3] p-4 sm:p-8"><div className="mx-auto max-w-3xl"><div className="mb-4 flex justify-between"><Link href={`/account/orders/${params.id}`} className="text-sm underline">← Order details</Link><button onClick={()=>window.print()} className="bg-[#173D32] px-4 py-2 text-xs font-bold text-white">Print / Save PDF</button></div>{loading&&<p>Loading invoice…</p>}{error&&<p role="alert" className="bg-white p-5 text-sm">{error}</p>}{invoice&&<article className="bg-white p-6 shadow-sm sm:p-10 print:shadow-none"><div className="flex justify-between gap-4 border-b pb-6"><div><p className="text-xs font-bold tracking-widest text-[#668071]">VEXAUSE LABS</p><h1 className="mt-2 text-2xl font-bold">Tax Invoice</h1><p className="mt-2 text-xs text-neutral-500">{invoice.sellerName}</p>{invoice.sellerGstin&&<p className="text-xs text-neutral-500">GSTIN: {invoice.sellerGstin}</p>}</div><div className="text-right text-xs"><b>{invoice.invoiceNumber}</b><p className="mt-2">Order {invoice.order.orderCode}</p><p>{new Date(invoice.issuedAt).toLocaleDateString("en-IN")}</p></div></div><div className="grid grid-cols-2 gap-5 py-6 text-xs"><div><b>Bill to</b><p className="mt-2">{invoice.buyerName}</p><p>Place of supply: {invoice.placeOfSupply}</p></div><div><b>Seller state code</b><p className="mt-2">{invoice.sellerStateCode}</p></div></div><div className="overflow-x-auto"><table className="w-full min-w-[500px] text-left text-xs"><thead className="border-y bg-neutral-50"><tr>{["Item / HSN","Qty","Taxable value","GST","Tax"].map(x=><th key={x} className="p-2">{x}</th>)}</tr></thead><tbody>{invoice.linesJson.map((line:any,i)=><tr key={i} className="border-b"><td className="p-2">{line.name}<p className="text-neutral-500">{line.hsnCode||"HSN not set"}</p></td><td className="p-2">{line.quantity}</td><td className="p-2">{money(line.taxablePaise)}</td><td className="p-2">{(line.gstRateBps/100).toFixed(2)}%</td><td className="p-2">{money(line.taxPaise)}</td></tr>)}</tbody></table></div><div className="ml-auto mt-6 max-w-xs space-y-2 text-xs"><p className="flex justify-between"><span>Subtotal</span><b>{money(invoice.subtotalPaise)}</b></p><p className="flex justify-between"><span>Discount</span><b>-{money(invoice.discountPaise)}</b></p><p className="flex justify-between"><span>Taxable value</span><b>{money(invoice.taxablePaise)}</b></p>{invoice.cgstPaise>0&&<p className="flex justify-between"><span>CGST</span><b>{money(invoice.cgstPaise)}</b></p>}{invoice.sgstPaise>0&&<p className="flex justify-between"><span>SGST</span><b>{money(invoice.sgstPaise)}</b></p>}{invoice.igstPaise>0&&<p className="flex justify-between"><span>IGST</span><b>{money(invoice.igstPaise)}</b></p>}<p className="flex justify-between border-t pt-3 text-base"><b>Total</b><b>{money(invoice.grandTotalPaise)}</b></p></div><p className="mt-10 border-t pt-4 text-[10px] text-neutral-500">Generated from VEXAUSE LABS order records. Please verify seller registration and invoice particulars before statutory use.</p></article>}</div><style jsx global>{`@media print { body { background: white !important; } main { background: white !important; padding: 0 !important; } button, main > div > div:first-child { display:none !important; } }`}</style></main>}
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Printer } from "lucide-react";
+
+type Invoice = {
+  invoiceNumber: string;
+  issuedAt: string;
+  sellerName: string;
+  sellerGstin: string | null;
+  sellerStateCode: string;
+  buyerName: string;
+  placeOfSupply: string;
+  subtotalPaise: number;
+  discountPaise: number;
+  taxablePaise: number;
+  cgstPaise: number;
+  sgstPaise: number;
+  igstPaise: number;
+  totalTaxPaise: number;
+  grandTotalPaise: number;
+  linesJson: any[];
+  order: { orderCode: string };
+};
+
+const money = (p: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(p / 100);
+
+export default function InvoicePage() {
+  const params = useParams<{ id: string }>();
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/customer/orders/${params.id}/invoice`, { cache: "no-store" })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw Error(d.error || "Invoice unavailable");
+        return d;
+      })
+      .then((d) => setInvoice(d.invoice))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [params.id]);
+
+  return (
+    <div className="vx-page vx-page--mid">
+      <div className="vx-row vx-row--between vx-no-print" style={{ marginBottom: 18, gap: 12 }}>
+        <Link href={`/account/orders/${params.id}`} className="vx-backlink">← Order details</Link>
+        <button type="button" onClick={() => window.print()} className="vx-btn vx-btn--primary vx-btn--sm">
+          <Printer size={14} aria-hidden="true" /> Print / save as PDF
+        </button>
+      </div>
+
+      {loading ? <div className="vx-skeleton" style={{ height: 420 }} aria-busy="true" /> : null}
+      {error ? <div className="vx-alert vx-alert--danger" role="alert">{error}</div> : null}
+
+      {invoice ? (
+        <article className="vx-invoice">
+          <header className="vx-invoice__head">
+            <div>
+              <p className="vx-invoice__brand">VEXAUSE LABS</p>
+              <h1 className="vx-invoice__title">Tax invoice</h1>
+              <p className="vx-small vx-muted" style={{ marginTop: 6 }}>{invoice.sellerName}</p>
+              {invoice.sellerGstin ? <p className="vx-small vx-muted">GSTIN {invoice.sellerGstin}</p> : null}
+            </div>
+            <dl className="vx-invoice__meta">
+              <div><dt>Invoice</dt><dd>{invoice.invoiceNumber}</dd></div>
+              <div><dt>Order</dt><dd>{invoice.order.orderCode}</dd></div>
+              <div><dt>Issued</dt><dd>{new Date(invoice.issuedAt).toLocaleDateString("en-IN")}</dd></div>
+            </dl>
+          </header>
+
+          <section className="vx-invoice__parties">
+            <div>
+              <p className="vx-label">Billed to</p>
+              <p style={{ margin: "6px 0 0", color: "var(--vx-ink-soft)", fontSize: 12.5 }}>{invoice.buyerName}</p>
+              <p className="vx-small vx-muted">Place of supply: {invoice.placeOfSupply}</p>
+            </div>
+            <div>
+              <p className="vx-label">Seller state code</p>
+              <p style={{ margin: "6px 0 0", color: "var(--vx-ink-soft)", fontSize: 12.5 }}>{invoice.sellerStateCode}</p>
+            </div>
+          </section>
+
+          <div className="vx-table-wrap">
+            <table className="vx-table vx-invoice__table">
+              <thead>
+                <tr>
+                  <th scope="col">Item / HSN</th>
+                  <th scope="col">Qty</th>
+                  <th scope="col">Taxable value</th>
+                  <th scope="col">GST</th>
+                  <th scope="col">Tax</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.linesJson.map((line: any, index: number) => (
+                  <tr key={index}>
+                    <td>
+                      <span className="vx-table__strong">{line.name}</span>
+                      <span className="vx-small vx-muted" style={{ display: "block" }}>{line.hsnCode || "HSN not set"}</span>
+                    </td>
+                    <td className="vx-table__num">{line.quantity}</td>
+                    <td className="vx-table__num">{money(line.taxablePaise)}</td>
+                    <td className="vx-table__num">{(line.gstRateBps / 100).toFixed(2)}%</td>
+                    <td className="vx-table__num">{money(line.taxPaise)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="vx-invoice__totals">
+            <div className="vx-summary">
+              <div className="vx-summary__row"><span>Subtotal</span><b>{money(invoice.subtotalPaise)}</b></div>
+              <div className="vx-summary__row"><span>Discount</span><b>−{money(invoice.discountPaise)}</b></div>
+              <div className="vx-summary__row"><span>Taxable value</span><b>{money(invoice.taxablePaise)}</b></div>
+              {invoice.cgstPaise > 0 ? <div className="vx-summary__row"><span>CGST</span><b>{money(invoice.cgstPaise)}</b></div> : null}
+              {invoice.sgstPaise > 0 ? <div className="vx-summary__row"><span>SGST</span><b>{money(invoice.sgstPaise)}</b></div> : null}
+              {invoice.igstPaise > 0 ? <div className="vx-summary__row"><span>IGST</span><b>{money(invoice.igstPaise)}</b></div> : null}
+              <div className="vx-summary__row vx-summary__row--total"><span>Total</span><b>{money(invoice.grandTotalPaise)}</b></div>
+            </div>
+          </div>
+
+          <footer className="vx-invoice__foot">
+            Generated from VEXAUSE LABS order records. Verify seller registration and invoice particulars before statutory use.
+          </footer>
+        </article>
+      ) : null}
+
+      <style jsx global>{`
+        @media print {
+          body { background: #fff !important; }
+          .vx-page { width: 100%; padding: 0; }
+          .vx-invoice { border: 0; box-shadow: none; }
+        }
+      `}</style>
+    </div>
+  );
+}

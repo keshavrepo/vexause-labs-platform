@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import CustomerNav from "@/components/CustomerNav";
+import { Alert, Badge, EmptyState, PageHeader, Panel } from "@/components/ui/Primitives";
 
 type ReviewForm = { rating: number; title: string; body: string };
 
@@ -16,8 +16,8 @@ export default function AccountReviewsPage() {
 
   async function load() {
     const [ordersResponse, reviewsResponse] = await Promise.all([
-      fetch("/api/customer/orders"),
-      fetch("/api/customer/reviews"),
+      fetch("/api/customer/orders", { cache: "no-store" }),
+      fetch("/api/customer/reviews", { cache: "no-store" }),
     ]);
     const ordersData = await ordersResponse.json();
     const reviewsData = await reviewsResponse.json();
@@ -57,92 +57,104 @@ export default function AccountReviewsPage() {
   }
 
   const delivered = orders.filter((order) => order.status === "DELIVERED" && order.kind === "STORE");
-  const purchasedItems = delivered.flatMap((order) =>
-    order.items.map((item: any) => ({ order, item }))
-  );
+  const purchasedItems = delivered.flatMap((order) => order.items.map((item: any) => ({ order, item })));
 
   return (
-    <main className="min-h-screen bg-[#F5F7F3] p-5">
-      <div className="mx-auto max-w-4xl">
-        <Link href="/account" className="text-xs font-bold text-[#668071]">← My account</Link>
-        <h1 className="mt-5 text-3xl font-bold text-[#173D32]">My product reviews</h1>
-        <CustomerNav />
-        <p className="mt-2 text-sm text-[#718078]">
-          Only delivered purchases can be reviewed. Reviews are checked before appearing publicly.
-        </p>
-        {error && <p className="mt-5 bg-white p-4 text-sm text-red-700">{error}</p>}
-        {message && <p className="mt-5 bg-white p-4 text-sm text-[#315D49]">{message}</p>}
+    <div className="vx-page">
+      <PageHeader
+        kicker="Account"
+        title="Product reviews"
+        description="Only delivered purchases can be reviewed. Every review is checked before it appears publicly — nothing is auto-published."
+        actions={<Link href="/account/orders" className="vx-btn vx-btn--sm">View orders</Link>}
+      />
 
-        <div className="mt-6 space-y-4">
-          {purchasedItems.map(({ order, item }) => (
-            <section key={`${order.id}-${item.id}`} className="border border-[#E1E7E1] bg-white p-5">
-              <div className="flex flex-wrap justify-between gap-2">
-                <div>
-                  <h2 className="font-bold text-[#173D32]">{item.productName}</h2>
-                  <p className="mt-1 text-xs text-[#718078]">Order {order.orderCode}</p>
-                </div>
-                <span className="text-xs font-semibold text-[#53745E]">Delivered</span>
-              </div>
+      {error ? <Alert tone="danger">{error}</Alert> : null}
+      {message ? <Alert tone="ok">{message}</Alert> : null}
 
-              {reviewed.has(item.productId) ? (
-                <p className="mt-4 text-sm text-[#718078]">
-                  Review submitted · {reviews.find((review) => review.productId === item.productId)?.status?.toLowerCase()}
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-3">
-                  <label className="text-xs font-semibold text-[#52675A]">
-                    Rating
-                    <select
-                      className="ml-3 border p-2"
-                      value={(forms[item.productId] || { rating: 5 }).rating}
-                      onChange={(event) => setForms((current) => ({
-                        ...current,
-                        [item.productId]: { ...(current[item.productId] || { title: "", body: "", rating: 5 }), rating: Number(event.target.value) },
-                      }))}
-                    >
-                      {[5, 4, 3, 2, 1].map((rating) => (
-                        <option key={rating} value={rating}>{rating} star{rating > 1 ? "s" : ""}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <input
-                    className="border p-3 text-sm"
-                    placeholder="Review title (optional)"
-                    maxLength={100}
-                    value={(forms[item.productId] || { title: "" }).title}
-                    onChange={(event) => setForms((current) => ({
-                      ...current,
-                      [item.productId]: { ...(current[item.productId] || { rating: 5, body: "" }), title: event.target.value },
-                    }))}
-                  />
-                  <textarea
-                    className="min-h-24 border p-3 text-sm"
-                    placeholder="Share your experience (at least 10 characters)"
-                    maxLength={2000}
-                    value={(forms[item.productId] || { body: "" }).body}
-                    onChange={(event) => setForms((current) => ({
-                      ...current,
-                      [item.productId]: { ...(current[item.productId] || { rating: 5, title: "" }), body: event.target.value },
-                    }))}
-                  />
-                  <button
-                    disabled={busy === item.productId}
-                    onClick={() => submit(item.productId, order.id)}
-                    className="w-fit bg-[#173D32] px-5 py-3 text-xs font-bold text-white disabled:opacity-50"
-                  >
-                    {busy === item.productId ? "Submitting…" : "Submit review"}
-                  </button>
+      {purchasedItems.length === 0 ? (
+        <EmptyState
+          title={error ? "Reviews unavailable" : "Nothing to review yet"}
+          text="Reviews become available after an order is marked delivered."
+          action={<Link href="/shop" className="vx-btn vx-btn--sm">Browse the collection</Link>}
+        />
+      ) : (
+        <div className="vx-stack">
+          {purchasedItems.map(({ order, item }) => {
+            const existing = reviews.find((review) => review.productId === item.productId);
+            const form = forms[item.productId] || { rating: 5, title: "", body: "" };
+            const update = (patch: Partial<ReviewForm>) =>
+              setForms((current) => ({
+                ...current,
+                [item.productId]: { ...(current[item.productId] || { rating: 5, title: "", body: "" }), ...patch },
+              }));
+            return (
+              <Panel key={`${order.id}-${item.id}`} title={item.productName} meta={`Order ${order.orderCode} · delivered`}>
+                <div className="vx-panel__body">
+                  {reviewed.has(item.productId) ? (
+                    <div className="vx-alert vx-alert--ok">
+                      Review submitted · status {String(existing?.status || "pending").toLowerCase()}
+                      {existing?.rating ? ` · ${existing.rating}/5` : ""}
+                    </div>
+                  ) : (
+                    <div className="vx-form">
+                      <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
+                        <label className="vx-field">
+                          <span className="vx-label">Rating</span>
+                          <select
+                            className="vx-select"
+                            value={form.rating}
+                            onChange={(event) => update({ rating: Number(event.target.value) })}
+                          >
+                            {[5, 4, 3, 2, 1].map((rating) => (
+                              <option key={rating} value={rating}>
+                                {rating} star{rating > 1 ? "s" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="vx-field">
+                          <span className="vx-label">Review title <span>(optional)</span></span>
+                          <input
+                            className="vx-input"
+                            placeholder="Summarise your experience"
+                            maxLength={100}
+                            value={form.title}
+                            onChange={(event) => update({ title: event.target.value })}
+                          />
+                        </label>
+                      </div>
+                      <label className="vx-field">
+                        <span className="vx-label">Your review</span>
+                        <textarea
+                          className="vx-textarea"
+                          placeholder="Share your experience (at least 10 characters)"
+                          maxLength={2000}
+                          value={form.body}
+                          onChange={(event) => update({ body: event.target.value })}
+                        />
+                        <span className="vx-hint">{form.body.length}/2000 characters</span>
+                      </label>
+                      <div className="vx-row vx-row--between" style={{ gap: 12 }}>
+                        <p className="vx-small vx-muted" style={{ margin: 0 }}>
+                          <Badge tone="neutral">Pending review</Badge> Reviews are moderated for accuracy and abuse.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={busy === item.productId}
+                          onClick={() => submit(item.productId, order.id)}
+                          className="vx-btn vx-btn--primary"
+                        >
+                          {busy === item.productId ? "Submitting…" : "Submit review"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </section>
-          ))}
+              </Panel>
+            );
+          })}
         </div>
-        {!delivered.length && (
-          <p className="mt-6 bg-white p-6 text-sm text-[#718078]">
-            Reviews become available after an order is marked delivered.
-          </p>
-        )}
-      </div>
-    </main>
+      )}
+    </div>
   );
 }

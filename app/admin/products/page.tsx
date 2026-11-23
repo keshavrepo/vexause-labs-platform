@@ -118,7 +118,7 @@ export default function AdminProductsPage() {
     <header className="border-b border-[#E0E6E0] bg-white px-5 py-5 sm:px-9">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         <div>
-          <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-semibold text-[#668071]"><ArrowLeft size={14}/> Admin overview</Link>
+          
           <h1 className="mt-3 text-2xl font-bold text-[#173D32]">Product catalogue</h1>
           <p className="mt-1 text-sm text-[#718078]">Manage the products customers can discover and order.</p>
         </div>

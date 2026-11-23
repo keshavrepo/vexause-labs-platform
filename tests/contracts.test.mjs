@@ -56,7 +56,7 @@ test("cart and wishlist can hydrate exact saved product IDs beyond the first cat
   assert.match(api, /ids\.length > 48/);
   assert.match(api, /id: \{ in: ids \}/);
   assert.match(shop, /fetchProductsByIds/);
-  assert.match(shop, /unique\.slice\(i\*48,\(i\+1\)\*48\)/);
+  assert.match(shop, /unique\.slice\(i \* 48, \(i \+ 1\) \* 48\)/);
 });
 
 test("product detail shares validated cart and wishlist state", () => {
@@ -65,21 +65,24 @@ test("product detail shares validated cart and wishlist state", () => {
   assert.match(detail, /import \{ useShopState \} from "@\/components\/ShopClient"/);
   assert.match(detail, /shop\.add\(product\.id/);
   assert.match(detail, /shop\.toggleWish\(product\.id\)/);
-  assert.match(shop, /window\.addEventListener\("storage",onStorage\)/);
+  assert.match(shop, /window\.addEventListener\("storage", onStorage\)/);
 });
 
 test("cart quantity controls respect tracked inventory limits", () => {
   const shop = read("components/ShopClient.tsx");
-  assert.match(shop, /trackInventory===false\?99:product!\.stockQuantity/);
-  assert.match(shop, /line\.quantity>=product!\.stockQuantity/);
+  assert.match(shop, /state\.add\(p\.id, p\.trackInventory === false \? 99 : p\.stockQuantity, undefined\)/);
+  assert.match(shop, /quantity: Math\.min\(99, Math\.max\(1, max\), n\)/);
+  assert.match(shop, /variant\.stockQuantity/);
 });
 
 
 test("customer account pages share responsive, route-aware navigation", () => {
-  const nav = read("components/CustomerNav.tsx");
-  assert.match(nav, /usePathname/);
-  assert.match(nav, /aria-current=\{active \? "page" : undefined\}/);
-  assert.match(nav, /overflow-x-auto/);
+  const shell = read("components/AccountShell.tsx");
+  const layout = read("app/account/layout.tsx");
+  assert.match(shell, /usePathname/);
+  assert.match(shell, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(shell, /vx-account__links/);
+  assert.match(layout, /<AccountShell>/);
   for (const file of [
     "app/account/page.tsx",
     "app/account/orders/page.tsx",
@@ -89,15 +92,19 @@ test("customer account pages share responsive, route-aware navigation", () => {
     "app/account/reviews/page.tsx",
     "app/account/notifications/page.tsx",
     "app/account/support/page.tsx",
-  ]) assert.match(read(file), /<CustomerNav \/>/, `${file} should render shared account navigation`);
+  ]) {
+    const page = read(file);
+    assert.doesNotMatch(page, /CustomerNav/, `${file} should rely on the shared account layout`);
+    assert.match(page, /vx-page/, `${file} should use the shared page shell`);
+  }
 });
 
 test("custom 3D request form safely handles async failures and resets after success", () => {
   const page = read("app/custom-3d-printing/page.tsx");
-  assert.match(page, /const formElement=e\.currentTarget/);
+  assert.match(page, /const formElement = e\.currentTarget/);
   assert.match(page, /formElement\.reset\(\)/);
-  assert.match(page, /catch \(err\)/);
-  assert.match(page, /finally \{ setBusy\(false\); \}/);
+  assert.match(page, /\} catch \(err\) \{/);
+  assert.match(page, /finally \{\s*setBusy\(false\)/);
 });
 
 test("store navigation exposes key destinations with loading-safe cart and wishlist counts", () => {
@@ -105,8 +112,8 @@ test("store navigation exposes key destinations with loading-safe cart and wishl
   const header = read("components/StorefrontHeader.tsx");
   assert.match(header, /aria-label="Store navigation"/);
   assert.match(header, /href:"\/custom-3d-printing"/);
-  assert.match(shop, /cartCount={state\.ready\?count:null}/);
-  assert.match(shop, /wishlistCount={state\.ready\?state\.wishlist\.length:null}/);
+  assert.match(shop, /cartCount=\{state\.ready \? count : null\}/);
+  assert.match(shop, /wishlistCount=\{state\.ready \? state\.wishlist\.length : null\}/);
 });
 
 
@@ -114,22 +121,22 @@ test("product detail renders a selectable gallery from the product image records
   const detail = read("components/ProductDetailClient.tsx");
   const route = read("app/api/products/by-slug/[slug]/route.ts");
   assert.match(route, /images: \{ orderBy: \{ sortOrder: "asc" \}, select:/);
-  assert.match(detail, /const selectedImage=images\[activeImage\]/);
-  assert.match(detail, /aria-pressed=\{activeImage===index\}/);
-  assert.match(detail, /View image \$\{index\+1\} of \$\{images\.length\}/);
+  assert.match(detail, /const \[activeImage, setActiveImage\] = useState\(0\)/);
+  assert.match(detail, /aria-pressed=\{activeImage === index\}/);
+  assert.match(detail, /View image \$\{index \+ 1\} of \$\{images\.length\}/);
 });
 
 test("product detail displays comparison pricing only when the stored compare price is higher", () => {
   const detail = read("components/ProductDetailClient.tsx");
-  assert.match(detail, /comparePrice==="number"&&comparePrice>displayedPrice/);
-  assert.match(detail, /Save \{money\(comparePrice!-displayedPrice\)\}/);
+  assert.match(detail, /typeof comparePrice === "number" && comparePrice > displayedPrice/);
+  assert.match(detail, /Save \{money\(comparePrice! - displayedPrice\)\}/);
 });
 
 test("product availability respects non-inventory products and tracked stock", () => {
   const detail = read("components/ProductDetailClient.tsx");
-  assert.match(detail, /product\.available\?\?\(!tracked\|\|product\.stockQuantity>0\)/);
+  assert.match(detail, /product\.available \?\? \(!tracked \|\| product\.stockQuantity > 0\)/);
   assert.match(detail, /disabled=\{!available\}/);
-  assert.match(detail, /tracked\?`In stock/);
+  assert.match(detail, /tracked \? `In stock/);
 });
 
 test("product page metadata canonical URL removes a trailing slash correctly", () => {
@@ -179,8 +186,8 @@ test("catalogue does not let variant products bypass option selection", () => {
   const route = read("app/api/products/route.ts");
   const shop = read("components/ShopClient.tsx");
   assert.match(route, /hasVariants: product\.variants\.length > 0/);
-  assert.match(shop, /disabled=\{!p\.available\|\|!!p\.hasVariants\}/);
-  assert.match(shop, /p\.hasVariants\?"View options"/);
+  assert.match(shop, /disabled=\{soldOut \|\| !!product\.hasVariants\}/);
+  assert.match(shop, /product\.hasVariants \? "Choose options" : "Add to cart"/);
 });
 
 
@@ -226,10 +233,10 @@ test("cart lines persist product and variant identity separately", () => {
 
 test("cart page uses selected variant price and inventory limits", () => {
   const shop = read("components/ShopClient.tsx");
-  assert.match(shop, /x\.variant\?\.pricePaise\?\?x\.product!\.pricePaise/);
+  assert.match(shop, /variant\?\.pricePaise \?\? product!\.pricePaise/);
   assert.match(shop, /variant\.stockQuantity/);
-  assert.match(shop, /state\.qty\(line\.productId,line\.variantId/);
-  assert.match(shop, /method:"PUT"/);
+  assert.match(shop, /state\.qty\(line\.productId, line\.variantId/);
+  assert.match(shop, /method: "PUT"/);
 });
 
 test("checkout snapshots selected variant and atomically decrements its stock", () => {
@@ -369,11 +376,11 @@ test("refund webhooks update ledger and completion requires every captured payme
 
 test("admin refund workspace warns before sending provider request and exposes refund history", () => {
   const page = read("app/admin/refunds/page.tsx");
-  const dashboard = read("app/admin/page.tsx");
+  const shell = read("components/AdminShell.tsx");
   assert.match(page, /Initiate Razorpay refund/);
   assert.match(page, /Refund history/);
   assert.match(page, /remaining/);
-  assert.match(dashboard, /href="\/admin\/refunds"/);
+  assert.match(shell, /href: "\/admin\/refunds"/);
 });
 
 
@@ -470,7 +477,7 @@ test("customer tax invoice endpoint is ownership-scoped and printable invoice pa
   const page=read("app/account/orders/[id]/invoice/page.tsx");
   const orderApi=read("app/api/customer/orders/[id]/route.ts");
   assert.match(api,/order:\{userId:auth\.userId\}/);
-  assert.match(page,/Print \/ Save PDF/);
+  assert.match(page,/Print \/ save as PDF/);
   assert.match(page,/CGST/);
   assert.match(page,/SGST/);
   assert.match(page,/IGST/);
@@ -517,11 +524,11 @@ test("dispatch readiness requires passed QC and full custom-order payment", () =
 
 test("admin production workspace is linked from the dashboard", () => {
   const page = read("app/admin/production/page.tsx");
-  const dashboard = read("app/admin/page.tsx");
+  const shell = read("components/AdminShell.tsx");
   assert.match(page, /Material consumption/);
   assert.match(page, /Quality inspection/);
   assert.match(page, /Mark ready for dispatch/);
-  assert.match(dashboard, /href="\/admin\/production"/);
+  assert.match(shell, /href: "\/admin\/production"/);
 });
 
 
@@ -736,9 +743,12 @@ test("Phase 44 public store config exposes only approved business identity field
 });
 
 test("Phase 44 dashboard links to store settings on desktop and mobile", async () => {
-  const page = await read("app/admin/page.tsx");
-  assert.match(page, /href="\/admin\/store-settings"/);
-  assert.match(page, /Store settings/);
+  const shell = await read("components/AdminShell.tsx");
+  const layout = await read("app/admin/layout.tsx");
+  assert.match(shell, /href: "\/admin\/store-settings"/);
+  assert.match(shell, /Store settings/);
+  assert.match(shell, /vx-admin__mobile-nav/);
+  assert.match(layout, /<AdminShell/);
 });
 
 
@@ -806,18 +816,14 @@ test("Phase 47 public help centre and contact page use factual workflow guidance
 
 
 test("Phase 48 checkout waits for synchronized cart and handles verification failures", async () => {
-  const fs = await import("node:fs");
-  const path = await import("node:path");
-  const base = process.cwd();
-  const cart = fs.readFileSync(path.join(base, "components/ShopClient.tsx"), "utf8");
-  const checkout = fs.readFileSync(path.join(base, "app/checkout/page.tsx"), "utf8");
-  assert.match(cart, /syncQueue=useRef/);
-  assert.match(cart, /setCartSync\("synced"\)/);
-  assert.match(cart, /aria-disabled=\{cartSync!=="synced"\|\|lines\.length===0\}/);
-  assert.match(cart, /Sign in to continue/);
+  const checkout = read("app/checkout/page.tsx");
+  const cartPage = read("components/ShopClient.tsx");
+  assert.match(checkout, /fetch\("\/api\/customer\/cart"\)/);
+  assert.match(checkout, /if \(a\.status === 401 \|\| c\.status === 401\)/);
+  assert.match(checkout, /setError\("Your cart is empty\."\)/);
   assert.match(checkout, /Payment verification failed/);
-  assert.match(checkout, /subtotalPaise<=0/);
-  assert.match(checkout, /retry payment from order details/);
+  assert.match(checkout, /disabled=\{busy \|\| addresses\.length === 0 \|\| subtotalPaise <= 0\}/);
+  assert.match(cartPage, /cartSync === "synced" && lines\.length > 0/);
 });
 
 
@@ -851,9 +857,10 @@ test("Phase 49 custom order balance includes successful refunds", async () => {
   const path = await import("node:path");
   const page = fs.readFileSync(path.join(process.cwd(), "app/account/orders/[id]/page.tsx"), "utf8");
   const support = fs.readFileSync(path.join(process.cwd(), "app/account/support/page.tsx"), "utf8");
-  assert.match(page, /Successful refunds:/);
-  assert.match(page, /order\.totalPaise-\(order\.payments\|\|\[\]\).*order\.refunds/);
-  assert.match(support, /Return\/refund enquiries are available after delivery/);
+  assert.match(page, /Successful refunds/);
+  assert.match(page, /r\.status === "SUCCEEDED"/);
+  assert.match(page, /order\.totalPaise - verifiedPaise \+ refundedPaise/);
+  assert.match(support, /return and refund enquiries after delivery/i);
 });
 
 
