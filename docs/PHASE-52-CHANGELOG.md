@@ -1,0 +1,1 @@
+# Phase 52 changelog\n\n- Fail-closed inventory restoration for missing original stock targets.\n- Prevented out-of-order Razorpay payment/refund webhook events from regressing terminal states.\n- Added lifecycle guardrail regression tests.\n

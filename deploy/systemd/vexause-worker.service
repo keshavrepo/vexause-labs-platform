@@ -1,0 +1,23 @@
+[Unit]
+Description=VEXAUSE LABS background job worker
+After=network-online.target postgresql.service vexause-web.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vexause
+Group=vexause
+WorkingDirectory=/var/www/vexause/app
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/vexause/app/.env
+ExecStart=/usr/bin/node scripts/worker.mjs
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/vexause
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

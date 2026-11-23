@@ -1,0 +1,25 @@
+[Unit]
+Description=VEXAUSE LABS Next.js storefront
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vexause
+Group=vexause
+WorkingDirectory=/var/www/vexause/app
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/vexause/app/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/www/vexause/app/.next /var/www/vexause/app/public/uploads /var/lib/vexause
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

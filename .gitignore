@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Runtime uploads and customer-provided CAD files must never enter Git.
+public/uploads/
+storage/
+private-uploads/
+
+# Database dumps, checksums, and local backup artifacts.
+*.dump
+*.dump.sha256
+backups/

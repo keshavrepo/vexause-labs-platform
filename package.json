@@ -1,0 +1,61 @@
+{
+  "name": "vexause-labs-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1 -p 3000",
+    "lint": "eslint .",
+    "admin:create": "node scripts/create-admin.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:health": "bash scripts/db-healthcheck.sh",
+    "worker": "node scripts/worker.mjs",
+    "worker:once": "WORKER_ONCE=true node scripts/worker.mjs",
+    "deploy:check": "bash scripts/predeploy-check.sh",
+    "test": "node --test tests/*.test.mjs",
+    "test:contracts": "node --test tests/contracts.test.mjs",
+    "db:baseline:generate": "bash scripts/create-baseline-migration.sh",
+    "db:migration-check": "bash scripts/check-migration-chain.sh",
+    "preflight": "node scripts/source-preflight.mjs",
+    "build:check": "npm run preflight && npm test && npm run db:migration-check && npm run build",
+    "release:audit": "node scripts/release-readiness.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.29",
+    "nodemailer": "^10.6.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "0.180.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "0.180.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.5.29",
+    "postcss": "^8.5.33",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.16",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "overrides": {
+    "postcss": "$postcss"
+  }
+}
