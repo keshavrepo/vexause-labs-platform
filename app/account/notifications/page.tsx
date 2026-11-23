@@ -27,7 +27,7 @@ export default function NotificationsPage() {
         window.location.href = "/account/login";
         return;
       }
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not load notifications.");
       setItems(data.notifications || []);
       setUnread(data.unreadCount || 0);

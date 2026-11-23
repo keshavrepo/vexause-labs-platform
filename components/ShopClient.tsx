@@ -22,7 +22,7 @@ async function fetchProductsByIds(ids: string[]): Promise<ShopProduct[]> {
     batches.map(async (batch) => {
       const params = new URLSearchParams({ ids: batch.join(","), limit: "48" });
       const response = await fetch(`/api/products?${params}`);
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not load saved products.");
       return (data.products || []) as ShopProduct[];
     }),
@@ -235,7 +235,7 @@ export function ShopPageClient() {
         if (maxPrice.trim()) params.set("maxPrice", String(Math.round(Number(maxPrice) * 100)));
         if (inStockOnly) params.set("inStock", "true");
         const response = await fetch(`/api/products?${params.toString()}`, { signal: controller.signal });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Catalogue unavailable");
         if (active) {
           setProducts(data.products);

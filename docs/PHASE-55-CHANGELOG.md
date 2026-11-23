@@ -8,6 +8,7 @@
 - Aligned account actions with the live API: cancellation only while no payment is verified, payment retry also for custom-order balances, invoice and deliverable downloads behind their existing endpoints.
 - Rebuilt the admin overview on `/api/admin/analytics` and removed per-page back-links and duplicated frames now that `AdminShell` provides navigation.
 - Rewrote the help centre and contact page around factual workflow guidance and configured contact details.
+- Added a branded 404 page and a global error boundary, and made client JSON reads resilient to non-JSON error responses.
 - Retuned the hero composition: wing and tail-fin geometry corrected, supports moved back to `z −2` at `×0.56` so the flanking products stay inside the camera frame; harness mirrors the scene constants.
 - Added root metadata (title template, description, viewport/theme colour) and a `<main>` landmark for account pages.
 - Updated the source-contract tests that pinned the previous storefront/account/admin markup to the new implementation (96 tests pass).

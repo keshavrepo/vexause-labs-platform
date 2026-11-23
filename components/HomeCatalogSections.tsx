@@ -23,7 +23,7 @@ export default function HomeCatalogSections() {
     const controller = new AbortController();
     fetch("/api/products?limit=4&sort=newest", { signal: controller.signal })
       .then(async response => {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Catalogue unavailable");
         setProducts(Array.isArray(data.products) ? data.products : []);
         setCategories(Array.isArray(data.categories) ? data.categories : []);

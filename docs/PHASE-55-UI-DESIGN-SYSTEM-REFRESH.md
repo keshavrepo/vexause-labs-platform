@@ -44,7 +44,7 @@ altered.
 - **Admin** — new overview reading `/api/admin/analytics`, shared frame for all admin workspaces, legacy back-links and
   duplicated page chrome removed, plus a conservative typography/table/input layer for the existing workspaces.
 - **Content** — help centre and contact page rewritten around real workflow behaviour and configured business contact
-  details.
+  details, plus a branded 404 (`app/not-found.tsx`) and root error boundary (`app/global-error.tsx`).
 - **Hero** — `components/hero/HeroModels.ts`, `HeroProductScene`, `HeroProductShowcase` and the CPU preview harness
   (`scripts/preview-hero-models.mjs`) now share one composition: featured product plus two supports, tail fin and folded
   wings corrected, supports moved back (`x ±2.28, z −2, scale ×0.56`) so both flanking products stay inside the hero

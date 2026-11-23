@@ -47,8 +47,9 @@ Consequences, all pre-existing and unrelated to the UI work:
 | `/checkout` | 200 | `/account/custom-requests` | 200 |
 | `/custom-3d-printing` | 200 | `/account/reviews` | 200 |
 | `/help` | 200 | `/account/notifications` | 200 |
-| `/contact` | 200 | `/account/support` | 200 |
-| `/account/login|register|forgot-password|reset-password|verify-email` | 200 each | `/admin`, `/admin/orders` | 500 (Prisma client missing) |
+| `/this-page-does-not-exist` | 404 (branded page) | `/account/support` | 200 |
+| `/contact` | 200 | | |
+| `/account/(login, register, forgot-password, reset-password, verify-email)` | 200 each | `/admin`, `/admin/orders` | 500 (Prisma client missing) |
 
 Each 200 page was also inspected as rendered HTML: one `<main>` landmark per storefront page, one account `<main>`,
 no leftover `CustomerNav`, no duplicate nested `<main>` in admin pages, and every page composes from `vx-*` classes.

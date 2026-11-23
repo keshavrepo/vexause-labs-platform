@@ -63,7 +63,7 @@ export default function AdminProductsPage() {
           categoryId: form.categoryId || null, isPublished: form.isPublished,
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Product could not be created.");
       setShowForm(false);
       setForm({ name:"", slug:"", shortDescription:"", description:"", price:"", sku:"", stock:"0", categoryId:"", isPublished:false });

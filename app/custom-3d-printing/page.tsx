@@ -82,7 +82,7 @@ export default function Custom3DPrintingPage() {
     form.set("requestType", type);
     try {
       const res = await fetch("/api/custom-requests", { method: "POST", body: form });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not submit request.");
       setMessage(`Request received. Your reference number is ${data.request.requestCode}. Our team will review it and contact you.`);
       setReference(data.request.requestCode);

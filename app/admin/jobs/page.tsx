@@ -9,7 +9,7 @@ export default function AdminJobsPage() {
   async function load() {
     const response = await fetch("/api/admin/jobs", { cache: "no-store" });
     if (!response.ok) { setError("Could not load background jobs. Sign in as admin."); return; }
-    const data = await response.json(); setJobs(data.jobs || []); setError("");
+    const data = await response.json().catch(() => ({})); setJobs(data.jobs || []); setError("");
   }
   useEffect(() => { void load(); }, []);
   async function retry(jobId: string) {
