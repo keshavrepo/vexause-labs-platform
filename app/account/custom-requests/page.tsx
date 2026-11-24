@@ -129,7 +129,6 @@ export default function CustomerCustomRequestsPage() {
                 </div>
               </div>
 
-              <div className="vx-panel__body">
                 <p style={{ margin: 0, color: "var(--vx-ink-soft)", fontSize: 12.5, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
                   {request.description}
                 </p>
@@ -234,7 +233,6 @@ export default function CustomerCustomRequestsPage() {
                     ))}
                   </div>
                 ) : null}
-              </div>
             </Panel>
           ))}
         </div>

@@ -152,7 +152,7 @@ export default function Custom3DPrintingPage() {
                 </div>
               </div>
 
-              <Panel title="Tell us about your project" meta="Fields marked * are required. Nothing is submitted until you press the button at the end.">
+              <Panel title="Tell us about your project" meta="Fields marked * are required. Nothing is submitted until you press the button at the end." bodyless>
                 <form onSubmit={submit} className="vx-panel__body vx-form" noValidate={false}>
                   <div className="vx-grid vx-grid--2" style={{ gap: 14 }}>
                     <label className="vx-field">

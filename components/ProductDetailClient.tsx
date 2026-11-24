@@ -312,46 +312,42 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
         <div className="vx-split" style={{ marginTop: 34 }}>
           <Panel title="Product details" meta="Written by the studio — no generated marketing copy.">
-            <div className="vx-panel__body">
-              <div style={{ whiteSpace: "pre-wrap", color: "var(--vx-ink-soft)", fontSize: 13.5, lineHeight: 1.8 }}>
-                {product.description || product.shortDescription || "Product details will be confirmed by the store."}
-              </div>
-              <p className="vx-small vx-muted" style={{ marginTop: 18, borderTop: "1px solid var(--vx-line)", paddingTop: 14 }}>
-                Need something bespoke?{" "}
-                <Link href="/custom-3d-printing" style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>
-                  Request a custom 3D print
-                </Link>{" "}
-                and we will quote before any work begins.
-              </p>
+            <div style={{ whiteSpace: "pre-wrap", color: "var(--vx-ink-soft)", fontSize: 13.5, lineHeight: 1.8 }}>
+              {product.description || product.shortDescription || "Product details will be confirmed by the store."}
             </div>
+            <p className="vx-small vx-muted" style={{ marginTop: 18, borderTop: "1px solid var(--vx-line)", paddingTop: 14 }}>
+              Need something bespoke?{" "}
+              <Link href="/custom-3d-printing" style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>
+                Request a custom 3D print
+              </Link>{" "}
+              and we will quote before any work begins.
+            </p>
           </Panel>
 
           <Panel title="Reviews" meta={reviewData.count ? `${reviewData.count} approved review${reviewData.count === 1 ? "" : "s"}` : "Moderated before publishing"}>
-            <div className="vx-panel__body">
-              {reviews.length > 0 ? (
-                <div>
-                  {reviews.slice(0, 5).map((review) => (
-                    <article key={review.id} className="vx-review">
-                      <p className="vx-row" style={{ margin: 0, gap: 8 }}>
-                        <span aria-label={`${review.rating} out of 5`} style={{ color: "#3f6b4f", letterSpacing: ".08em" }}>
-                          {"★".repeat(Math.max(0, Math.min(5, review.rating)))}
-                          <span style={{ color: "#c8d2c7" }}>{"★".repeat(5 - Math.max(0, Math.min(5, review.rating)))}</span>
-                        </span>
-                        <span className="vx-small vx-muted">{review.user?.name || "Verified customer"}</span>
-                      </p>
-                      {review.title ? <p style={{ margin: "6px 0 0", color: "var(--vxl-forest)", fontSize: 12.5, fontWeight: 700 }}>{review.title}</p> : null}
-                      <p className="vx-small" style={{ margin: "4px 0 0", color: "var(--vx-ink-soft)", lineHeight: 1.65 }}>{review.body}</p>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState title="No approved reviews yet" text="Reviews are published only after moderation from verified purchases." />
-              )}
-              <p className="vx-small vx-muted" style={{ marginTop: 14 }}>
-                Purchased this product? Submit a review from{" "}
-                <Link href="/account/reviews" style={{ fontWeight: 700, textDecoration: "underline" }}>your account</Link>.
-              </p>
-            </div>
+            {reviews.length > 0 ? (
+              <div>
+                {reviews.slice(0, 5).map((review) => (
+                  <article key={review.id} className="vx-review">
+                    <p className="vx-row" style={{ margin: 0, gap: 8 }}>
+                      <span aria-label={`${review.rating} out of 5`} style={{ color: "#3f6b4f", letterSpacing: ".08em" }}>
+                        {"★".repeat(Math.max(0, Math.min(5, review.rating)))}
+                        <span style={{ color: "#c8d2c7" }}>{"★".repeat(5 - Math.max(0, Math.min(5, review.rating)))}</span>
+                      </span>
+                      <span className="vx-small vx-muted">{review.user?.name || "Verified customer"}</span>
+                    </p>
+                    {review.title ? <p style={{ margin: "6px 0 0", color: "var(--vxl-forest)", fontSize: 12.5, fontWeight: 700 }}>{review.title}</p> : null}
+                    <p className="vx-small" style={{ margin: "4px 0 0", color: "var(--vx-ink-soft)", lineHeight: 1.65 }}>{review.body}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="No approved reviews yet" text="Reviews are published only after moderation from verified purchases." />
+            )}
+            <p className="vx-small vx-muted" style={{ marginTop: 14 }}>
+              Purchased this product? Submit a review from{" "}
+              <Link href="/account/reviews" style={{ fontWeight: 700, textDecoration: "underline" }}>your account</Link>.
+            </p>
           </Panel>
         </div>
       </div>

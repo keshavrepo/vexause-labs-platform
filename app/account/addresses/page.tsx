@@ -126,7 +126,7 @@ export default function AddressesPage() {
           )}
         </Panel>
 
-        <Panel title="Add an address" meta="Only business or delivery details are needed here.">
+        <Panel title="Add an address" meta="Only business or delivery details are needed here." bodyless>
           <form onSubmit={save} className="vx-panel__body vx-form" id="new-address">
             <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
               {Object.entries(form)

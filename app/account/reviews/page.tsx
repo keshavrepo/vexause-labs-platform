@@ -89,67 +89,65 @@ export default function AccountReviewsPage() {
               }));
             return (
               <Panel key={`${order.id}-${item.id}`} title={item.productName} meta={`Order ${order.orderCode} · delivered`}>
-                <div className="vx-panel__body">
-                  {reviewed.has(item.productId) ? (
-                    <div className="vx-alert vx-alert--ok">
-                      Review submitted · status {String(existing?.status || "pending").toLowerCase()}
-                      {existing?.rating ? ` · ${existing.rating}/5` : ""}
-                    </div>
-                  ) : (
-                    <div className="vx-form">
-                      <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
-                        <label className="vx-field">
-                          <span className="vx-label">Rating</span>
-                          <select
-                            className="vx-select"
-                            value={form.rating}
-                            onChange={(event) => update({ rating: Number(event.target.value) })}
-                          >
-                            {[5, 4, 3, 2, 1].map((rating) => (
-                              <option key={rating} value={rating}>
-                                {rating} star{rating > 1 ? "s" : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="vx-field">
-                          <span className="vx-label">Review title <span>(optional)</span></span>
-                          <input
-                            className="vx-input"
-                            placeholder="Summarise your experience"
-                            maxLength={100}
-                            value={form.title}
-                            onChange={(event) => update({ title: event.target.value })}
-                          />
-                        </label>
-                      </div>
+                {reviewed.has(item.productId) ? (
+                  <div className="vx-alert vx-alert--ok">
+                    Review submitted · status {String(existing?.status || "pending").toLowerCase()}
+                    {existing?.rating ? ` · ${existing.rating}/5` : ""}
+                  </div>
+                ) : (
+                  <div className="vx-form">
+                    <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
                       <label className="vx-field">
-                        <span className="vx-label">Your review</span>
-                        <textarea
-                          className="vx-textarea"
-                          placeholder="Share your experience (at least 10 characters)"
-                          maxLength={2000}
-                          value={form.body}
-                          onChange={(event) => update({ body: event.target.value })}
-                        />
-                        <span className="vx-hint">{form.body.length}/2000 characters</span>
-                      </label>
-                      <div className="vx-row vx-row--between" style={{ gap: 12 }}>
-                        <p className="vx-small vx-muted" style={{ margin: 0 }}>
-                          <Badge tone="neutral">Pending review</Badge> Reviews are moderated for accuracy and abuse.
-                        </p>
-                        <button
-                          type="button"
-                          disabled={busy === item.productId}
-                          onClick={() => submit(item.productId, order.id)}
-                          className="vx-btn vx-btn--primary"
+                        <span className="vx-label">Rating</span>
+                        <select
+                          className="vx-select"
+                          value={form.rating}
+                          onChange={(event) => update({ rating: Number(event.target.value) })}
                         >
-                          {busy === item.productId ? "Submitting…" : "Submit review"}
-                        </button>
-                      </div>
+                          {[5, 4, 3, 2, 1].map((rating) => (
+                            <option key={rating} value={rating}>
+                              {rating} star{rating > 1 ? "s" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="vx-field">
+                        <span className="vx-label">Review title <span>(optional)</span></span>
+                        <input
+                          className="vx-input"
+                          placeholder="Summarise your experience"
+                          maxLength={100}
+                          value={form.title}
+                          onChange={(event) => update({ title: event.target.value })}
+                        />
+                      </label>
                     </div>
-                  )}
-                </div>
+                    <label className="vx-field">
+                      <span className="vx-label">Your review</span>
+                      <textarea
+                        className="vx-textarea"
+                        placeholder="Share your experience (at least 10 characters)"
+                        maxLength={2000}
+                        value={form.body}
+                        onChange={(event) => update({ body: event.target.value })}
+                      />
+                      <span className="vx-hint">{form.body.length}/2000 characters</span>
+                    </label>
+                    <div className="vx-row vx-row--between" style={{ gap: 12 }}>
+                      <p className="vx-small vx-muted" style={{ margin: 0 }}>
+                        <Badge tone="neutral">Pending review</Badge> Reviews are moderated for accuracy and abuse.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={busy === item.productId}
+                        onClick={() => submit(item.productId, order.id)}
+                        className="vx-btn vx-btn--primary"
+                      >
+                        {busy === item.productId ? "Submitting…" : "Submit review"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </Panel>
             );
           })}

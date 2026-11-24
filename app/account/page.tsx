@@ -70,18 +70,16 @@ export default function AccountPage() {
     return (
       <div className="vx-page vx-page--narrow">
         <Panel title="Sign in required" meta="Your account details are private and require an active session.">
-          <div className="vx-panel__body">
-            <EmptyState
-              title="You are not signed in"
-              text="Sign in to see your orders, custom 3D requests, invoices and support history."
-              action={
-                <div className="vx-actions" style={{ justifyContent: "center" }}>
-                  <Link href="/account/login" className="vx-btn vx-btn--primary vx-btn--sm">Sign in</Link>
-                  <Link href="/account/register" className="vx-btn vx-btn--sm">Create an account</Link>
-                </div>
-              }
-            />
-          </div>
+          <EmptyState
+            title="You are not signed in"
+            text="Sign in to see your orders, custom 3D requests, invoices and support history."
+            action={
+              <div className="vx-actions" style={{ justifyContent: "center" }}>
+                <Link href="/account/login" className="vx-btn vx-btn--primary vx-btn--sm">Sign in</Link>
+                <Link href="/account/register" className="vx-btn vx-btn--sm">Create an account</Link>
+              </div>
+            }
+          />
         </Panel>
       </div>
     );
@@ -170,21 +168,19 @@ export default function AccountPage() {
 
         <div className="vx-stack">
           <Panel title="Account details" meta="Contact the studio if any of these need changing.">
-            <div className="vx-panel__body">
-              <dl className="vx-kv">
-                <div className="vx-kv__row"><dt>Name</dt><dd>{user.name}</dd></div>
-                <div className="vx-kv__row"><dt>Email</dt><dd style={{ overflowWrap: "anywhere" }}>{user.email}</dd></div>
-                <div className="vx-kv__row"><dt>Phone</dt><dd>{user.phone || "Not added"}</dd></div>
-                <div className="vx-kv__row"><dt>Member since</dt><dd>{new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</dd></div>
-              </dl>
-              <div className="vx-actions" style={{ marginTop: 16 }}>
-                <Link href="/account/addresses" className="vx-btn vx-btn--sm"><MapPin size={13} aria-hidden="true" /> Addresses</Link>
-                <Link href="/account/support" className="vx-btn vx-btn--sm"><MessageSquare size={13} aria-hidden="true" /> Support</Link>
-              </div>
+            <dl className="vx-kv">
+              <div className="vx-kv__row"><dt>Name</dt><dd>{user.name}</dd></div>
+              <div className="vx-kv__row"><dt>Email</dt><dd style={{ overflowWrap: "anywhere" }}>{user.email}</dd></div>
+              <div className="vx-kv__row"><dt>Phone</dt><dd>{user.phone || "Not added"}</dd></div>
+              <div className="vx-kv__row"><dt>Member since</dt><dd>{new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</dd></div>
+            </dl>
+            <div className="vx-actions" style={{ marginTop: 16 }}>
+              <Link href="/account/addresses" className="vx-btn vx-btn--sm"><MapPin size={13} aria-hidden="true" /> Addresses</Link>
+              <Link href="/account/support" className="vx-btn vx-btn--sm"><MessageSquare size={13} aria-hidden="true" /> Support</Link>
             </div>
           </Panel>
 
-          <Panel tone="quiet" title="Quick links">
+          <Panel tone="quiet" title="Quick links" bodyless>
             <div className="vx-panel__body vx-grid" style={{ gap: 8 }}>
               {[
                 { href: "/account/orders", icon: Package, label: "Orders & invoices" },

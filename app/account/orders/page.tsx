@@ -48,13 +48,11 @@ export default function OrdersPage() {
 
       {error ? (
         <Panel title="Orders unavailable">
-          <div className="vx-panel__body">
-            <EmptyState
-              title={error}
-              text="Sign in with the account used at checkout to see its order history."
-              action={<Link href="/account/login" className="vx-btn vx-btn--primary vx-btn--sm">Sign in</Link>}
-            />
-          </div>
+          <EmptyState
+            title={error}
+            text="Sign in with the account used at checkout to see its order history."
+            action={<Link href="/account/login" className="vx-btn vx-btn--primary vx-btn--sm">Sign in</Link>}
+          />
         </Panel>
       ) : loading ? (
         <div className="vx-stack" aria-busy="true">
@@ -65,18 +63,16 @@ export default function OrdersPage() {
         </div>
       ) : orders.length === 0 ? (
         <Panel>
-          <div className="vx-panel__body">
-            <EmptyState
-              title="No orders yet"
-              text="Orders appear here as soon as checkout completes. Custom 3D requests are tracked separately."
-              action={
-                <div className="vx-actions" style={{ justifyContent: "center" }}>
-                  <Link href="/shop" className="vx-btn vx-btn--primary vx-btn--sm">Browse products</Link>
-                  <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm">Custom print</Link>
-                </div>
-              }
-            />
-          </div>
+          <EmptyState
+            title="No orders yet"
+            text="Orders appear here as soon as checkout completes. Custom 3D requests are tracked separately."
+            action={
+              <div className="vx-actions" style={{ justifyContent: "center" }}>
+                <Link href="/shop" className="vx-btn vx-btn--primary vx-btn--sm">Browse products</Link>
+                <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm">Custom print</Link>
+              </div>
+            }
+          />
         </Panel>
       ) : (
         <div className="vx-stack">

@@ -6,6 +6,15 @@ on this branch: `npm run lint` clean, `npm test` 96/96, `npm run preflight`
 `npm run build` compiling successfully before the same pre-existing Prisma
 type-check stop, and a route smoke of the storefront pages at 200.
 
+## Cart summary and cart-sync fixes
+
+`docs/CART-SUMMARY-AND-SYNC-FIX.md` records the two cart defects fixed on top of
+V3: panels now own their internal padding (25 previously unpadded panels across
+storefront, account and checkout), and the CSRF origin check no longer rejects
+same-origin API calls because it compared the browser's `Origin` against the
+server's bind address. Lint clean, 96/96 contracts, preflight 168 files, build
+compiles before the pre-existing Prisma type stop.
+
 ## Phase 55 — UI design system refresh
 
 Date: 2026-11-23 · Branch: `arena/7673ea45-vexause-labs-platform` · Base commit: `0994108`

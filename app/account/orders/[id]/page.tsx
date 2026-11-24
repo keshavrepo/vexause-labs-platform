@@ -212,109 +212,99 @@ export default function OrderDetailPage() {
 
           {order.kind === "CUSTOM" ? (
             <Panel title="Custom 3D order payment" meta="Advances are collected against the accepted quotation.">
-              <div className="vx-panel__body">
-                <div className="vx-summary">
-                  <div className="vx-summary__row"><span>Quoted total</span><b>{money(order.totalPaise)}</b></div>
-                  <div className="vx-summary__row"><span>Verified payments</span><b>{money(verifiedPaise)}</b></div>
-                  <div className="vx-summary__row"><span>Successful refunds</span><b>{money(refundedPaise)}</b></div>
-                  <div className="vx-summary__row vx-summary__row--total"><span>Remaining balance</span><b>{money(balancePaise)}</b></div>
-                </div>
-                <p className="vx-small vx-muted" style={{ marginTop: 12 }}>
-                  Any initial advance is collected against the accepted quotation. The remaining balance must be paid before dispatch.
-                </p>
-                {["PAID", "IN_PRODUCTION"].includes(order.status) && balancePaise > 0 ? (
-                  <button type="button" disabled={busy} onClick={retryPayment} className="vx-btn vx-btn--primary vx-btn--sm" style={{ marginTop: 12 }}>
-                    {busy ? "Opening…" : "Pay remaining balance"}
-                  </button>
-                ) : null}
+              <div className="vx-summary">
+                <div className="vx-summary__row"><span>Quoted total</span><b>{money(order.totalPaise)}</b></div>
+                <div className="vx-summary__row"><span>Verified payments</span><b>{money(verifiedPaise)}</b></div>
+                <div className="vx-summary__row"><span>Successful refunds</span><b>{money(refundedPaise)}</b></div>
+                <div className="vx-summary__row vx-summary__row--total"><span>Remaining balance</span><b>{money(balancePaise)}</b></div>
               </div>
+              <p className="vx-small vx-muted" style={{ marginTop: 12 }}>
+                Any initial advance is collected against the accepted quotation. The remaining balance must be paid before dispatch.
+              </p>
+              {["PAID", "IN_PRODUCTION"].includes(order.status) && balancePaise > 0 ? (
+                <button type="button" disabled={busy} onClick={retryPayment} className="vx-btn vx-btn--primary vx-btn--sm" style={{ marginTop: 12 }}>
+                  {busy ? "Opening…" : "Pay remaining balance"}
+                </button>
+              ) : null}
             </Panel>
           ) : null}
 
           <Panel title="Delivery address" meta="Used for this order only.">
-            <div className="vx-panel__body">
-              {order.address ? (
-                <div className="vx-row" style={{ alignItems: "flex-start", gap: 10 }}>
-                  <MapPin size={15} aria-hidden="true" style={{ color: "#5c8468", marginTop: 2 }} />
-                  <address style={{ margin: 0, fontStyle: "normal", color: "var(--vx-ink-soft)", fontSize: 12.5, lineHeight: 1.7 }}>
-                    <strong style={{ display: "block", color: "var(--vxl-forest)" }}>{order.address.fullName}</strong>
-                    {order.address.line1}
-                    {order.address.line2 ? `, ${order.address.line2}` : ""}
-                    <br />
-                    {order.address.city}, {order.address.state} {order.address.postalCode}
-                    <br />
-                    {order.address.phone}
-                  </address>
-                </div>
-              ) : (
-                <p className="vx-small vx-muted">No address on record for this order.</p>
-              )}
-            </div>
+            {order.address ? (
+              <div className="vx-row" style={{ alignItems: "flex-start", gap: 10 }}>
+                <MapPin size={15} aria-hidden="true" style={{ color: "#5c8468", marginTop: 2 }} />
+                <address style={{ margin: 0, fontStyle: "normal", color: "var(--vx-ink-soft)", fontSize: 12.5, lineHeight: 1.7 }}>
+                  <strong style={{ display: "block", color: "var(--vxl-forest)" }}>{order.address.fullName}</strong>
+                  {order.address.line1}
+                  {order.address.line2 ? `, ${order.address.line2}` : ""}
+                  <br />
+                  {order.address.city}, {order.address.state} {order.address.postalCode}
+                  <br />
+                  {order.address.phone}
+                </address>
+              </div>
+            ) : (
+              <p className="vx-small vx-muted">No address on record for this order.</p>
+            )}
           </Panel>
         </div>
 
         <div className="vx-stack">
           <Panel title="Progress" meta="Every status change recorded by the team.">
-            <div className="vx-panel__body">
-              {order.statusHistory?.length ? (
-                <ol className="vx-timeline">
-                  {[...order.statusHistory].reverse().map((entry: any, index: number) => (
-                    <li className="vx-timeline__item" key={`${entry.status}-${index}`}>
-                      <span className="vx-timeline__dot" aria-hidden="true" />
-                      <div>
-                        <p className="vx-timeline__title">{String(entry.status).replaceAll("_", " ")}</p>
-                        <p className="vx-timeline__meta">
-                          {entry.note || "Order update"} · {new Date(entry.createdAt).toLocaleString("en-IN")}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="vx-small vx-muted">No status updates recorded yet.</p>
-              )}
-            </div>
+            {order.statusHistory?.length ? (
+              <ol className="vx-timeline">
+                {[...order.statusHistory].reverse().map((entry: any, index: number) => (
+                  <li className="vx-timeline__item" key={`${entry.status}-${index}`}>
+                    <span className="vx-timeline__dot" aria-hidden="true" />
+                    <div>
+                      <p className="vx-timeline__title">{String(entry.status).replaceAll("_", " ")}</p>
+                      <p className="vx-timeline__meta">
+                        {entry.note || "Order update"} · {new Date(entry.createdAt).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="vx-small vx-muted">No status updates recorded yet.</p>
+            )}
           </Panel>
 
           <Panel title="Shipment" meta="Tracking appears once the order is dispatched.">
-            <div className="vx-panel__body">
-              {order.shipments?.length ? (
-                <div className="vx-stack" style={{ gap: 12 }}>
-                  {order.shipments.map((shipment: any) => (
-                    <div key={shipment.id} className="vx-panel vx-panel--quiet" style={{ padding: 14 }}>
-                      <p className="vx-row" style={{ gap: 7, margin: 0, color: "var(--vxl-forest)", fontSize: 12.5, fontWeight: 700 }}>
-                        <Truck size={14} aria-hidden="true" /> {shipment.carrier || "Carrier"}
-                      </p>
-                      <p className="vx-small vx-muted" style={{ margin: "5px 0 0" }}>
-                        Status: {String(shipment.status).replaceAll("_", " ")}
-                      </p>
-                      <p className="vx-small vx-muted" style={{ margin: "3px 0 0" }}>
-                        Tracking number: {shipment.trackingNumber || "Not available"}
-                      </p>
-                      {shipment.trackingUrl ? (
-                        <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
-                          Track shipment
-                        </a>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState title="Not dispatched yet" text="Tracking details will appear here once your order leaves the studio." />
-              )}
-            </div>
+            {order.shipments?.length ? (
+              <div className="vx-stack" style={{ gap: 12 }}>
+                {order.shipments.map((shipment: any) => (
+                  <div key={shipment.id} className="vx-panel vx-panel--quiet" style={{ padding: 14 }}>
+                    <p className="vx-row" style={{ gap: 7, margin: 0, color: "var(--vxl-forest)", fontSize: 12.5, fontWeight: 700 }}>
+                      <Truck size={14} aria-hidden="true" /> {shipment.carrier || "Carrier"}
+                    </p>
+                    <p className="vx-small vx-muted" style={{ margin: "5px 0 0" }}>
+                      Status: {String(shipment.status).replaceAll("_", " ")}
+                    </p>
+                    <p className="vx-small vx-muted" style={{ margin: "3px 0 0" }}>
+                      Tracking number: {shipment.trackingNumber || "Not available"}
+                    </p>
+                    {shipment.trackingUrl ? (
+                      <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
+                        Track shipment
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Not dispatched yet" text="Tracking details will appear here once your order leaves the studio." />
+            )}
           </Panel>
 
           <Panel tone="quiet" title="Need help?" meta="Requests are reviewed, not auto-approved.">
-            <div className="vx-panel__body">
-              <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
-                Open a support request for cancellations, returns or refund enquiries. The team reviews each request and
-                replies in your account.
-              </p>
-              <Link href="/account/support" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
-                <Package size={13} aria-hidden="true" /> Open support
-              </Link>
-            </div>
+            <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+              Open a support request for cancellations, returns or refund enquiries. The team reviews each request and
+              replies in your account.
+            </p>
+            <Link href="/account/support" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
+              <Package size={13} aria-hidden="true" /> Open support
+            </Link>
           </Panel>
         </div>
       </div>

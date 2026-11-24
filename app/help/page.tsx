@@ -69,7 +69,7 @@ export default function HelpPage() {
             ))}
           </div>
 
-          <Panel title="Frequently asked questions" meta="Answers reflect the platform's current behaviour — no delivery promises are implied.">
+          <Panel title="Frequently asked questions" meta="Answers reflect the platform's current behaviour — no delivery promises are implied." bodyless>
             <div className="vx-panel__body" style={{ paddingTop: 6 }}>
               {faqs.map((faq) => (
                 <details key={faq.q} className="vx-faq">

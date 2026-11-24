@@ -3,8 +3,33 @@ import { NextRequest, NextResponse } from "next/server";
 const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const WEBHOOK_PREFIX = "/api/webhooks/";
 
+/**
+ * Origins that may issue state-changing API calls.
+ *
+ * `request.nextUrl.origin` follows the address the server was bound to (for
+ * example `http://0.0.0.0:3000` under `next dev -H 0.0.0.0`, or an internal
+ * host behind a proxy), which is not what the browser reports in `Origin`.
+ * The request's own Host / X-Forwarded-Host is what the client actually
+ * addressed, so that is the authoritative same-origin comparison; extra
+ * origins can still be allowed explicitly through TRUSTED_ORIGINS.
+ */
 function allowedOrigins(request: NextRequest) {
   const values = new Set<string>([request.nextUrl.origin]);
+
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+    .split(",")[0]
+    .trim();
+  if (host) {
+    const forwardedProto = (request.headers.get("x-forwarded-proto") || "").split(",")[0].trim();
+    if (forwardedProto) values.add(`${forwardedProto}://${host}`);
+    // Browsers always send Origin, and the scheme may be terminated by a proxy
+    // that does not forward the protocol header; the host is not attacker
+    // controllable, so accepting both schemes for it keeps same-origin working
+    // without widening the allow-list beyond this site.
+    values.add(`https://${host}`);
+    values.add(`http://${host}`);
+  }
+
   for (const value of (process.env.TRUSTED_ORIGINS || "").split(",")) {
     const trimmed = value.trim();
     if (!trimmed) continue;

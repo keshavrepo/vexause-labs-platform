@@ -95,6 +95,8 @@
 
 /* ----------------------------------------------------------------- panels */
 .vx-panel {
+  --vx-panel-pad-x: clamp(18px, 1.8vw, 24px);
+  --vx-panel-pad-y: clamp(16px, 1.5vw, 20px);
   min-width: 0;
   border: 1px solid var(--vx-line);
   border-radius: var(--vx-radius-lg);
@@ -104,19 +106,21 @@
 .vx-panel--quiet { background: var(--vx-surface-soft); box-shadow: none; }
 .vx-panel--accent { border-color: #cfe0c4; background: linear-gradient(180deg, #f6faf1 0%, #ffffff 62%); }
 .vx-panel--flush { overflow: hidden; }
+/* One padding rhythm for every panel: head, body and foot all use the same
+   inline gutter, so a panel's content can never sit against its border. */
 .vx-panel__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   border-bottom: 1px solid var(--vx-line);
-  padding: 18px 22px;
+  padding: calc(var(--vx-panel-pad-y) - 2px) var(--vx-panel-pad-x) var(--vx-panel-pad-y);
 }
-.vx-panel__title { margin: 0; color: var(--vxl-forest); font-size: 14.5px; font-weight: 720; letter-spacing: -.01em; }
-.vx-panel__meta { margin: 5px 0 0; color: var(--vx-ink-muted); font-size: 12px; line-height: 1.6; }
-.vx-panel__body { padding: 22px; }
-.vx-panel__body--tight { padding: 16px 22px; }
-.vx-panel__foot { border-top: 1px solid var(--vx-line); padding: 16px 22px; background: var(--vx-surface-soft); border-radius: 0 0 var(--vx-radius-lg) var(--vx-radius-lg); }
+.vx-panel__title { margin: 0; color: var(--vxl-forest); font-size: 14.5px; font-weight: 720; letter-spacing: -.01em; line-height: 1.35; }
+.vx-panel__meta { margin: 6px 0 0; color: var(--vx-ink-muted); font-size: 12px; line-height: 1.6; }
+.vx-panel__body { padding: var(--vx-panel-pad-y) var(--vx-panel-pad-x); }
+.vx-panel__body--tight { padding: calc(var(--vx-panel-pad-y) - 4px) var(--vx-panel-pad-x); }
+.vx-panel__foot { border-top: 1px solid var(--vx-line); padding: var(--vx-panel-pad-y) var(--vx-panel-pad-x); background: var(--vx-surface-soft); border-radius: 0 0 var(--vx-radius-lg) var(--vx-radius-lg); }
 
 /* ------------------------------------------------------------------ stats */
 .vx-stat {
@@ -277,11 +281,23 @@
 @keyframes vx-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
 /* ---------------------------------------------------------------- summary */
-.vx-summary { display: grid; gap: 10px; }
-.vx-summary__row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; color: var(--vx-ink-muted); font-size: 12.5px; }
-.vx-summary__row b { color: var(--vx-ink-soft); font-weight: 650; font-variant-numeric: tabular-nums; }
-.vx-summary__row--total { border-top: 1px solid var(--vx-line); margin-top: 4px; padding-top: 12px; color: var(--vxl-forest); font-size: 14px; font-weight: 700; }
-.vx-summary__row--total b { color: var(--vxl-forest); font-size: 19px; letter-spacing: -.02em; }
+/* Money blocks: one row rhythm, amounts aligned in a tabular right column. */
+.vx-summary { display: grid; gap: 12px; }
+.vx-summary__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--vx-ink-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.vx-summary__row > :last-child { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+.vx-summary__row b { color: var(--vx-ink-soft); font-weight: 650; }
+.vx-summary__row--total { margin-top: 4px; border-top: 1px solid var(--vx-line); padding-top: 14px; color: var(--vxl-forest); font-size: 13.5px; font-weight: 700; }
+.vx-summary__row--total b { color: var(--vxl-forest); font-size: 20px; letter-spacing: -.02em; }
+.vx-summary__actions { display: grid; gap: 10px; margin-top: 20px; }
+.vx-summary__note { margin: 0; color: var(--vx-ink-muted); font-size: 11px; line-height: 1.6; }
 .vx-summary__row--credit b { color: var(--vx-success); }
 
 /* -------------------------------------------------------------- timeline */

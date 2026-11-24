@@ -87,7 +87,7 @@ export default function SupportPage() {
 
       <div className="vx-split" style={{ marginTop: 20 }}>
         <div className="vx-stack">
-          <Panel title="Create a support request" meta="Requests are linked to your account and, when relevant, to an order.">
+          <Panel title="Create a support request" meta="Requests are linked to your account and, when relevant, to an order." bodyless>
             <form onSubmit={submit} className="vx-panel__body vx-form">
               <div className="vx-grid vx-grid--2" style={{ gap: 12 }}>
                 <label className="vx-field">
@@ -206,34 +206,30 @@ export default function SupportPage() {
 
         <aside className="vx-order-aside">
           <Panel tone="quiet" title="How support works" meta="Typical review path for a request.">
-            <div className="vx-panel__body">
-              <ol className="vx-timeline">
-                {[
-                  ["Submitted", "Your request is recorded with a reference code."],
-                  ["Review", "The team checks order state, eligibility and payment records."],
-                  ["Reply", "A written response is added to the request in this account."],
-                  ["Action", "Approved refunds and cancellations are processed separately."],
-                ].map(([title, text], index) => (
-                  <li className="vx-timeline__item" key={title}>
-                    <span className="vx-timeline__dot" aria-hidden="true" />
-                    <div>
-                      <p className="vx-timeline__title">{String(index + 1).padStart(2, "0")} · {title}</p>
-                      <p className="vx-timeline__meta">{text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <ol className="vx-timeline">
+              {[
+                ["Submitted", "Your request is recorded with a reference code."],
+                ["Review", "The team checks order state, eligibility and payment records."],
+                ["Reply", "A written response is added to the request in this account."],
+                ["Action", "Approved refunds and cancellations are processed separately."],
+              ].map(([title, text], index) => (
+                <li className="vx-timeline__item" key={title}>
+                  <span className="vx-timeline__dot" aria-hidden="true" />
+                  <div>
+                    <p className="vx-timeline__title">{String(index + 1).padStart(2, "0")} · {title}</p>
+                    <p className="vx-timeline__meta">{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </Panel>
           <Panel title="Prefer email?" meta="Contact details come from store settings.">
-            <div className="vx-panel__body">
-              <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
-                Business contact details are published on the contact page. Requests made here stay linked to your order.
-              </p>
-              <a href="/contact" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
-                <MessageSquare size={13} aria-hidden="true" /> Contact details
-              </a>
-            </div>
+            <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+              Business contact details are published on the contact page. Requests made here stay linked to your order.
+            </p>
+            <a href="/contact" className="vx-btn vx-btn--sm" style={{ marginTop: 10 }}>
+              <MessageSquare size={13} aria-hidden="true" /> Contact details
+            </a>
           </Panel>
         </aside>
       </div>

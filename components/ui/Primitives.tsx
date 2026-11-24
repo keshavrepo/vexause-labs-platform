@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /**
  * Shared VEXAUSE LABS UI primitives.
@@ -39,6 +39,9 @@ export function Panel({
   footer,
   tone,
   flush,
+  bodyless,
+  bodyClassName = "",
+  bodyStyle,
   className = "",
 }: {
   title?: ReactNode;
@@ -48,6 +51,10 @@ export function Panel({
   footer?: ReactNode;
   tone?: "quiet" | "accent";
   flush?: boolean;
+  /** Skip the padded body when the children bring their own body element. */
+  bodyless?: boolean;
+  bodyClassName?: string;
+  bodyStyle?: CSSProperties;
   className?: string;
 }) {
   return (
@@ -61,7 +68,13 @@ export function Panel({
           {actions ? <div className="vx-actions">{actions}</div> : null}
         </div>
       ) : null}
-      {children}
+      {flush || bodyless ? (
+        children
+      ) : (
+        <div className={`vx-panel__body ${bodyClassName}`.trim()} style={bodyStyle}>
+          {children}
+        </div>
+      )}
       {footer ? <div className="vx-panel__foot">{footer}</div> : null}
     </section>
   );

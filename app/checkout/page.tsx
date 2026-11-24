@@ -201,36 +201,34 @@ export default function CheckoutPage() {
                 meta="Addresses are managed from your account."
                 actions={<Link href="/account/addresses" className="vx-btn vx-btn--sm"><Plus size={13} aria-hidden="true" /> Manage</Link>}
               >
-                <div className="vx-panel__body">
-                  {addresses.length === 0 ? (
-                    <EmptyState
-                      title="Add a delivery address first"
-                      text="An address is required before an order can be created."
-                      action={<Link href="/account/addresses" className="vx-btn vx-btn--primary vx-btn--sm">Add an address</Link>}
-                    />
-                  ) : (
-                    <div role="radiogroup" aria-label="Delivery address" className="vx-stack" style={{ gap: 10 }}>
-                      {addresses.map((a) => (
-                        <label key={a.id} className="vx-address-option" data-selected={selected === a.id}>
-                          <input type="radio" name="address" checked={selected === a.id} onChange={() => setSelected(a.id)} />
-                          <span>
-                            <strong>
-                              {a.fullName} {a.isDefault ? <span className="vx-badge vx-badge--brand" style={{ marginLeft: 6 }}>Default</span> : null}
-                            </strong>
-                            <p>
-                              {a.line1}, {a.city}, {a.state} {a.postalCode}
-                              <br />
-                              {a.phone}
-                            </p>
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {addresses.length === 0 ? (
+                  <EmptyState
+                    title="Add a delivery address first"
+                    text="An address is required before an order can be created."
+                    action={<Link href="/account/addresses" className="vx-btn vx-btn--primary vx-btn--sm">Add an address</Link>}
+                  />
+                ) : (
+                  <div role="radiogroup" aria-label="Delivery address" className="vx-stack" style={{ gap: 10 }}>
+                    {addresses.map((a) => (
+                      <label key={a.id} className="vx-address-option" data-selected={selected === a.id}>
+                        <input type="radio" name="address" checked={selected === a.id} onChange={() => setSelected(a.id)} />
+                        <span>
+                          <strong>
+                            {a.fullName} {a.isDefault ? <span className="vx-badge vx-badge--brand" style={{ marginLeft: 6 }}>Default</span> : null}
+                          </strong>
+                          <p>
+                            {a.line1}, {a.city}, {a.state} {a.postalCode}
+                            <br />
+                            {a.phone}
+                          </p>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </Panel>
 
-              <Panel title="Payment method" meta="Available options depend on administrator configuration.">
+              <Panel title="Payment method" meta="Available options depend on administrator configuration." bodyless>
                 <div className="vx-panel__body vx-stack" style={{ gap: 10 }}>
                   <label className="vx-radio-card" data-selected={method === "RAZORPAY"}>
                     <input type="radio" name="payment" checked={method === "RAZORPAY"} onChange={() => setMethod("RAZORPAY")} />
@@ -250,119 +248,113 @@ export default function CheckoutPage() {
               </Panel>
 
               <Panel title="Order notes" meta="Optional delivery instructions for the studio.">
-                <div className="vx-panel__body">
-                  <label className="vx-field">
-                    <span className="vx-label">Notes for this order</span>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      maxLength={500}
-                      rows={3}
-                      placeholder="Delivery instructions or notes"
-                      className="vx-textarea"
-                    />
-                    <span className="vx-hint">{notes.length}/500 characters</span>
-                  </label>
-                </div>
+                <label className="vx-field">
+                  <span className="vx-label">Notes for this order</span>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Delivery instructions or notes"
+                    className="vx-textarea"
+                  />
+                  <span className="vx-hint">{notes.length}/500 characters</span>
+                </label>
               </Panel>
 
               <Panel title="Discount coupon" meta="Validated against live coupon rules.">
-                <div className="vx-panel__body">
-                  <div className="vx-row" style={{ gap: 8 }}>
-                    <label className="vx-search" style={{ flex: 1 }}>
-                      <Tag size={15} aria-hidden="true" />
-                      <span className="sr-only">Coupon code</span>
-                      <input
-                        value={couponCode}
-                        onChange={(e) => {
-                          setCouponCode(e.target.value.toUpperCase());
-                          setCouponInfo(null);
-                        }}
-                        maxLength={40}
-                        placeholder="Enter coupon code"
-                        className="vx-search__input"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      disabled={couponBusy || !couponCode.trim() || subtotalPaise <= 0}
-                      onClick={applyCoupon}
-                      className="vx-btn vx-btn--primary"
-                    >
-                      {couponBusy ? "Checking…" : "Apply"}
-                    </button>
-                  </div>
-                  {couponInfo ? (
-                    <div className="vx-alert vx-alert--ok" style={{ marginTop: 12 }} role="status">
-                      <span>
-                        <strong>{couponInfo.code} applied.</strong> Discount {money(couponInfo.discountPaise)} · new subtotal{" "}
-                        {money(couponInfo.newTotalPaise)}
-                      </span>
-                    </div>
-                  ) : null}
+                <div className="vx-row" style={{ gap: 8 }}>
+                  <label className="vx-search" style={{ flex: 1 }}>
+                    <Tag size={15} aria-hidden="true" />
+                    <span className="sr-only">Coupon code</span>
+                    <input
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponInfo(null);
+                      }}
+                      maxLength={40}
+                      placeholder="Enter coupon code"
+                      className="vx-search__input"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={couponBusy || !couponCode.trim() || subtotalPaise <= 0}
+                    onClick={applyCoupon}
+                    className="vx-btn vx-btn--primary"
+                  >
+                    {couponBusy ? "Checking…" : "Apply"}
+                  </button>
                 </div>
+                {couponInfo ? (
+                  <div className="vx-alert vx-alert--ok" style={{ marginTop: 12 }} role="status">
+                    <span>
+                      <strong>{couponInfo.code} applied.</strong> Discount {money(couponInfo.discountPaise)} · new subtotal{" "}
+                      {money(couponInfo.newTotalPaise)}
+                    </span>
+                  </div>
+                ) : null}
               </Panel>
             </div>
 
             <aside className="vx-order-aside">
               <Panel title="Order summary" meta={`${items.reduce((n, i) => n + i.quantity, 0)} item(s) in this order`}>
-                <div className="vx-panel__body">
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 10 }}>
-                    {items.map((item) => (
-                      <li key={item.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12.5 }}>
-                        <span style={{ color: "var(--vx-ink-soft)", minWidth: 0 }}>
-                          {item.product?.name || "Item"}
-                          {item.variant?.name ? <span className="vx-muted"> · {item.variant.name}</span> : null}
-                          <span className="vx-muted"> × {item.quantity}</span>
-                        </span>
-                        <b className="vx-tabular" style={{ whiteSpace: "nowrap" }}>
-                          {money(((item.variant?.pricePaise ?? item.product?.pricePaise) || 0) * item.quantity)}
-                        </b>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="vx-summary" style={{ marginTop: 16 }}>
-                    <div className="vx-summary__row">
-                      <span>Subtotal</span>
-                      <b>{money(couponInfo?.newTotalPaise ?? subtotalPaise)}</b>
-                    </div>
-                    {couponInfo ? (
-                      <div className="vx-summary__row vx-summary__row--credit">
-                        <span>Coupon {couponInfo.code}</span>
-                        <b>−{money(couponInfo.discountPaise)}</b>
-                      </div>
-                    ) : null}
-                    <div className="vx-summary__row">
-                      <span>Shipping &amp; tax</span>
-                      <b>Calculated by the server</b>
-                    </div>
-                    <div className="vx-summary__row vx-summary__row--total">
-                      <span>Order total</span>
-                      <b>{money(couponInfo?.newTotalPaise ?? subtotalPaise)}</b>
-                    </div>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 10 }}>
+                  {items.map((item) => (
+                    <li key={item.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12.5 }}>
+                      <span style={{ color: "var(--vx-ink-soft)", minWidth: 0 }}>
+                        {item.product?.name || "Item"}
+                        {item.variant?.name ? <span className="vx-muted"> · {item.variant.name}</span> : null}
+                        <span className="vx-muted"> × {item.quantity}</span>
+                      </span>
+                      <b className="vx-tabular" style={{ whiteSpace: "nowrap" }}>
+                        {money(((item.variant?.pricePaise ?? item.product?.pricePaise) || 0) * item.quantity)}
+                      </b>
+                    </li>
+                  ))}
+                </ul>
+                <div className="vx-summary" style={{ marginTop: 16 }}>
+                  <div className="vx-summary__row">
+                    <span>Subtotal</span>
+                    <b>{money(couponInfo?.newTotalPaise ?? subtotalPaise)}</b>
                   </div>
-
-                  {error ? <Alert tone="danger">{error}</Alert> : null}
-
-                  <button
-                    onClick={place}
-                    disabled={busy || addresses.length === 0 || subtotalPaise <= 0}
-                    className="vx-btn vx-btn--primary vx-btn--block"
-                    style={{ marginTop: 16 }}
-                  >
-                    {busy ? "Processing…" : payLabel}
-                  </button>
-                  <p className="vx-small vx-muted" style={{ marginTop: 12, lineHeight: 1.6 }}>
-                    {method === "COD"
-                      ? "COD orders are confirmed only when the administrator has enabled COD and the order is within the configured limit."
-                      : "You will be redirected to the payment provider. Closing it keeps your order saved so payment can be retried."}
-                  </p>
-                  <ul className="vx-trust-list">
-                    <li>Prices and stock verified again on the server</li>
-                    <li>Invoice and order history in your account</li>
-                    <li>No card details are handled by VEXAUSE LABS</li>
-                  </ul>
+                  {couponInfo ? (
+                    <div className="vx-summary__row vx-summary__row--credit">
+                      <span>Coupon {couponInfo.code}</span>
+                      <b>−{money(couponInfo.discountPaise)}</b>
+                    </div>
+                  ) : null}
+                  <div className="vx-summary__row">
+                    <span>Shipping &amp; tax</span>
+                    <b>Calculated by the server</b>
+                  </div>
+                  <div className="vx-summary__row vx-summary__row--total">
+                    <span>Order total</span>
+                    <b>{money(couponInfo?.newTotalPaise ?? subtotalPaise)}</b>
+                  </div>
                 </div>
+
+                {error ? <Alert tone="danger">{error}</Alert> : null}
+
+                <button
+                  onClick={place}
+                  disabled={busy || addresses.length === 0 || subtotalPaise <= 0}
+                  className="vx-btn vx-btn--primary vx-btn--block"
+                  style={{ marginTop: 16 }}
+                >
+                  {busy ? "Processing…" : payLabel}
+                </button>
+                <p className="vx-small vx-muted" style={{ marginTop: 12, lineHeight: 1.6 }}>
+                  {method === "COD"
+                    ? "COD orders are confirmed only when the administrator has enabled COD and the order is within the configured limit."
+                    : "You will be redirected to the payment provider. Closing it keeps your order saved so payment can be retried."}
+                </p>
+                <ul className="vx-trust-list">
+                  <li>Prices and stock verified again on the server</li>
+                  <li>Invoice and order history in your account</li>
+                  <li>No card details are handled by VEXAUSE LABS</li>
+                </ul>
               </Panel>
             </aside>
           </div>

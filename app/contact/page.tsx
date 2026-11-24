@@ -25,22 +25,18 @@ export default function ContactPage() {
 
           <div className="vx-grid vx-grid--2" style={{ marginTop: 20 }}>
             <Panel title="Order or delivery issue" meta="Signed-in support keeps the conversation linked to the order.">
-              <div className="vx-panel__body">
-                <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
-                  Submit a request from your account and follow its status. Cancellation, return and refund requests are
-                  reviewed by the team — they are not automatic.
-                </p>
-                <Link href="/account/support" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Go to help &amp; support</Link>
-              </div>
+              <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+                Submit a request from your account and follow its status. Cancellation, return and refund requests are
+                reviewed by the team — they are not automatic.
+              </p>
+              <Link href="/account/support" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Go to help &amp; support</Link>
             </Panel>
             <Panel title="Custom 3D printing" meta="Quote-first workflow, no obligation.">
-              <div className="vx-panel__body">
-                <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
-                  Send a printable model or a brief. We review feasibility and share a quotation before any production
-                  begins.
-                </p>
-                <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Request a custom print</Link>
-              </div>
+              <p className="vx-small vx-muted" style={{ marginTop: 0 }}>
+                Send a printable model or a brief. We review feasibility and share a quotation before any production
+                begins.
+              </p>
+              <Link href="/custom-3d-printing" className="vx-btn vx-btn--sm" style={{ marginTop: 12 }}>Request a custom print</Link>
             </Panel>
           </div>
 

@@ -472,7 +472,9 @@ export function CartPageClient() {
   const state = useShopState();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
-  const [cartSync, setCartSync] = useState<"waiting" | "syncing" | "synced" | "signin" | "error">("waiting");
+  const [cartSync, setCartSync] = useState<"waiting" | "syncing" | "synced" | "signin" | "error" | "empty">("waiting");
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncAttempt, setSyncAttempt] = useState(0);
   const syncQueue = useRef<Promise<void>>(Promise.resolve());
   const syncVersion = useRef(0);
   const cartIds = state.cart.map((line) => `${line.productId}:${line.variantId || ""}:${line.quantity}`).join(",");
@@ -482,33 +484,61 @@ export function CartPageClient() {
     let active = true;
     const version = ++syncVersion.current;
     const snapshot = state.cart.map((line) => ({ ...line }));
+    const isCurrent = () => active && version === syncVersion.current;
     setCartSync("syncing");
+    setSyncError(null);
     syncQueue.current = syncQueue.current
       .catch(() => {})
       .then(async () => {
-        const response = await fetch("/api/customer/cart", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: snapshot }),
-        });
-        if (!active) return;
+        let response: Response;
+        try {
+          response = await fetch("/api/customer/cart", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: snapshot }),
+          });
+        } catch {
+          if (isCurrent()) {
+            setSyncError("The request could not reach the server. Check the connection and try again.");
+            setCartSync("error");
+          }
+          return;
+        }
+        if (!isCurrent()) return;
         if (response.status === 401) {
-          if (version === syncVersion.current) setCartSync("signin");
+          // Guests cannot persist a cart. An empty cart is not a problem to
+          // solve, a filled one is — so only that case asks them to sign in.
+          setCartSync(snapshot.length === 0 ? "empty" : "signin");
           return;
         }
         if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || "Cart could not be synchronized.");
+          // The server explains why it refused (unavailable product, stock,
+          // blocked origin). Keep that reason instead of hiding it.
+          const data = await response.json().catch(() => null);
+          const reason =
+            typeof data?.error === "string" && data.error
+              ? data.error
+              : response.status >= 500
+                ? `The cart service is temporarily unavailable (server error ${response.status}).`
+                : `The request was refused (status ${response.status}).`;
+          if (isCurrent()) {
+            setSyncError(reason);
+            setCartSync("error");
+          }
+          return;
         }
-        if (version === syncVersion.current) setCartSync("synced");
+        if (isCurrent()) setCartSync(snapshot.length === 0 ? "empty" : "synced");
       })
       .catch(() => {
-        if (active && version === syncVersion.current) setCartSync("error");
+        if (isCurrent()) {
+          setSyncError("The cart could not be synchronized.");
+          setCartSync("error");
+        }
       });
     return () => {
       active = false;
     };
-  }, [state.ready, state.cart, cartIds]);
+  }, [state.ready, state.cart, cartIds, syncAttempt]);
 
   useEffect(() => {
     if (!state.ready) return;
@@ -561,7 +591,15 @@ export function CartPageClient() {
           </div>
           <div className="vx-actions">
             <Badge tone={cartSync === "synced" ? "ok" : cartSync === "error" ? "danger" : cartSync === "signin" ? "warn" : "neutral"}>
-              {cartSync === "synced" ? "Cart synced" : cartSync === "error" ? "Sync failed" : cartSync === "signin" ? "Sign-in needed" : "Syncing"}
+              {cartSync === "synced"
+                ? "Cart synced"
+                : cartSync === "error"
+                  ? "Sync failed"
+                  : cartSync === "signin"
+                    ? "Sign-in needed"
+                    : cartSync === "empty"
+                      ? "Cart empty"
+                      : "Syncing"}
             </Badge>
           </div>
         </header>
@@ -681,42 +719,65 @@ export function CartPageClient() {
                 </div>
                 <div className="vx-summary__row">
                   <span>Shipping</span>
-                  <b>Calculated at checkout</b>
+                  <span>Calculated at checkout</span>
+                </div>
+                <div className="vx-summary__row">
+                  <span>Taxes</span>
+                  <span>Confirmed at checkout</span>
                 </div>
                 <div className="vx-summary__row vx-summary__row--total">
-                  <span>Subtotal</span>
+                  <span>Estimated total</span>
                   <b>{money(subtotal)}</b>
                 </div>
               </div>
-              {cartSync === "signin" ? (
-                <Link href="/account/login?next=/cart" className="vx-btn vx-btn--primary vx-btn--block" style={{ marginTop: 18 }}>
-                  Sign in to continue
-                </Link>
-              ) : (
-                <Link
-                  aria-disabled={!readyToCheckout}
-                  href={readyToCheckout ? "/checkout" : "#cart-sync"}
-                  onClick={(e) => {
-                    if (!readyToCheckout) e.preventDefault();
-                  }}
-                  className={`vx-btn vx-btn--primary vx-btn--block${readyToCheckout ? "" : " is-disabled"}`}
-                  style={{ marginTop: 18 }}
-                >
-                  {cartSync === "syncing" || cartSync === "waiting" ? "Preparing cart…" : cartSync === "error" ? "Cart sync failed" : "Continue to checkout"}
-                </Link>
-              )}
-              <div id="cart-sync">
-                {cartSync === "error" ? (
-                  <p className="vx-alert vx-alert--danger" role="alert" style={{ marginTop: 10 }}>
-                    We couldn&apos;t sync your cart. Refresh this page and try again.
-                  </p>
-                ) : null}
+
+              <div className="vx-summary__actions" id="cart-sync">
                 {cartSync === "signin" ? (
-                  <p className="vx-small vx-muted" style={{ marginTop: 10 }}>
-                    Sign in first; your saved cart will sync when you return here.
-                  </p>
+                  <Link href="/account/login?next=/cart" className="vx-btn vx-btn--primary vx-btn--block">
+                    Sign in to continue
+                  </Link>
+                ) : (
+                  <Link
+                    aria-disabled={!readyToCheckout}
+                    href={readyToCheckout ? "/checkout" : "#cart-sync"}
+                    onClick={(e) => {
+                      if (!readyToCheckout) e.preventDefault();
+                    }}
+                    className={`vx-btn vx-btn--primary vx-btn--block${readyToCheckout ? "" : " is-disabled"}`}
+                  >
+                    {cartSync === "syncing" || cartSync === "waiting" ? "Preparing cart…" : "Continue to checkout"}
+                  </Link>
+                )}
+
+                {cartSync === "error" ? (
+                  <div className="vx-alert vx-alert--danger" role="alert">
+                    <div className="vx-stack" style={{ gap: 8 }}>
+                      <span>We couldn&apos;t sync your cart. {syncError}</span>
+                      <span className="vx-small">Your cart is still saved in this browser — nothing was lost.</span>
+                      <div className="vx-actions">
+                        <button
+                          type="button"
+                          className="vx-btn vx-btn--sm"
+                          onClick={() => setSyncAttempt((attempt) => attempt + 1)}
+                        >
+                          Try again
+                        </button>
+                        <Link href="/shop" className="vx-btn vx-btn--sm vx-btn--quiet">
+                          Review the collection
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {cartSync === "signin" ? (
+                  <p className="vx-summary__note">Sign in first; your saved cart will sync when you return here.</p>
+                ) : null}
+                {cartSync === "synced" ? (
+                  <p className="vx-summary__note">Cart synced to your account. Prices and stock are checked again at checkout.</p>
                 ) : null}
               </div>
+
               <ul className="vx-trust-list">
                 <li>Server-side signature verification for online payments</li>
                 <li>Private storage for any custom print files</li>
